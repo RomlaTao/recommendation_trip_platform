@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Put,
   Patch,
   Query,
   ParseUUIDPipe,
@@ -35,6 +36,10 @@ import { UsersService } from '../users.service';
 import { PermissionGuard } from 'src/core/guards/permission.guard';
 import { RequirePermissions } from '../../../common/decorators/require-permissions.decorator';
 import { PaginationDto } from '../../../common/dtos/pagination.dto';
+import { UserRoleService } from '../../permission/services/user-role.service';
+import { AssignUserRolesDto } from '../../permission/dto/assign-user-roles.dto';
+import { SetPrimaryUserRoleDto } from '../../permission/dto/set-primary-user-role.dto';
+import { UserRoleSummaryDto } from '../../permission/dto/user-role-summary.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -42,7 +47,10 @@ import { PaginationDto } from '../../../common/dtos/pagination.dto';
 @Controller('users')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userRoleService: UserRoleService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -105,5 +113,89 @@ export class UsersController {
   @ApiNotFoundResponse({ description: 'User not found' })
   async restoreUserById(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
     return this.usersService.restoreUser(id);
+  }
+
+  @Get(':id/roles')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('users:read')
+  @ApiOperation({ summary: 'Get roles assigned to user' })
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
+  @ApiOkResponse({ description: 'User roles loaded', type: UserRoleSummaryDto })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  async getUserRoles(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<UserRoleSummaryDto> {
+    return this.userRoleService.getUserRoleSummary(id);
+  }
+
+  @Put(':id/roles')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('users:update')
+  @ApiOperation({ summary: 'Replace all roles for user (multi-role)' })
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
+  @ApiBody({ type: AssignUserRolesDto })
+  @ApiOkResponse({ description: 'User roles replaced', type: UserRoleSummaryDto })
+  @ApiNotFoundResponse({ description: 'User or role not found' })
+  async replaceUserRoles(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: AssignUserRolesDto,
+  ): Promise<UserRoleSummaryDto> {
+    await this.userRoleService.replaceRolesByCodes(
+      id,
+      dto.roleCodes,
+      dto.primaryRoleCode,
+    );
+    return this.userRoleService.getUserRoleSummary(id);
+  }
+
+  @Patch(':id/roles/assign')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('users:update')
+  @ApiOperation({ summary: 'Assign additional roles to user' })
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
+  @ApiBody({ type: AssignUserRolesDto })
+  @ApiOkResponse({ description: 'User roles updated', type: UserRoleSummaryDto })
+  @ApiNotFoundResponse({ description: 'User or role not found' })
+  async assignUserRoles(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: AssignUserRolesDto,
+  ): Promise<UserRoleSummaryDto> {
+    await this.userRoleService.assignRolesByCodes(
+      id,
+      dto.roleCodes,
+      dto.primaryRoleCode,
+    );
+    return this.userRoleService.getUserRoleSummary(id);
+  }
+
+  @Patch(':id/roles/primary')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('users:update')
+  @ApiOperation({ summary: 'Set primary role for user' })
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
+  @ApiBody({ type: SetPrimaryUserRoleDto })
+  @ApiOkResponse({ description: 'Primary role updated', type: UserRoleSummaryDto })
+  @ApiNotFoundResponse({ description: 'User or role not found' })
+  async setPrimaryRole(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: SetPrimaryUserRoleDto,
+  ): Promise<UserRoleSummaryDto> {
+    await this.userRoleService.setPrimaryRoleByCode(id, dto.roleCode);
+    return this.userRoleService.getUserRoleSummary(id);
+  }
+
+  @Delete(':id/roles/:roleCode')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermissions('users:update')
+  @ApiOperation({ summary: 'Remove role from user' })
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
+  @ApiParam({ name: 'roleCode', type: String, example: 'MODERATOR' })
+  @ApiNoContentResponse({ description: 'Role removed from user' })
+  @ApiNotFoundResponse({ description: 'User or role mapping not found' })
+  async removeRoleFromUser(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('roleCode') roleCode: string,
+  ): Promise<void> {
+    await this.userRoleService.removeRoleByCode(id, roleCode);
   }
 }
