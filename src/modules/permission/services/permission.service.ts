@@ -39,6 +39,22 @@ export class PermissionService {
     return this.permissionRepository.findOne({ where: { code } });
   }
 
+  async findById(id: string): Promise<Permission | null> {
+    return this.permissionRepository.findOne({ where: { id } });
+  }
+
+  async findMany(
+    page: number,
+    limit: number,
+  ): Promise<{ permissions: Permission[]; total: number }> {
+    const [permissions, total] = await this.permissionRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { permissions, total };
+  }
+
   async findByCodes(codes: string[]): Promise<Permission[]> {
     if (codes.length === 0) return [];
     return this.permissionRepository.find({

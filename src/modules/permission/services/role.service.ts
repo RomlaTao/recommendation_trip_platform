@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { ERROR_MESSAGES } from '../../../common/constants/error-messages.constant.js';
 import { Permission } from '../entities/permission.entity.js';
 import { RolePermission } from '../entities/role-permission.entity.js';
@@ -42,6 +42,33 @@ export class RoleService {
     return this.roleRepository.findOne({ where: { id } });
   }
 
+  async findMany(
+    page: number,
+    limit: number,
+  ): Promise<{ roles: Role[]; total: number }> {
+    const [roles, total] = await this.roleRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { roles, total };
+  }
+
+  async findByIdWithPermissions(id: string): Promise<Role | null> {
+    return this.roleRepository.findOne({
+      where: { id },
+      relations: { rolePermissions: { permission: true } },
+    });
+  }
+
+  async getByIdWithPermissionsOrThrow(id: string): Promise<Role> {
+    const role = await this.findByIdWithPermissions(id);
+    if (!role) {
+      throw new NotFoundException(ERROR_MESSAGES.RESOURCE_NOT_FOUND);
+    }
+    return role;
+  }
+
   async assignPermissionsByIds(
     roleId: string,
     permissionIds: string[],
@@ -69,26 +96,46 @@ export class RoleService {
       where: {
         roleId,
         permissionId: In(validPermissionIds),
+        deletedAt: IsNull(),
       },
     });
     const existingPermissionIdSet = new Set(
       existingMappings.map((mapping) => mapping.permissionId),
     );
 
-    const newMappings = validPermissionIds
-      .filter((permissionId) => !existingPermissionIdSet.has(permissionId))
-      .map((permissionId) =>
+    const mappingsWithDeleted = await this.rolePermissionRepository.find({
+      where: {
+        roleId,
+        permissionId: In(validPermissionIds),
+      },
+      withDeleted: true,
+    });
+    const deletedByPermissionId = new Map(
+      mappingsWithDeleted
+        .filter((mapping) => mapping.deletedAt !== null)
+        .map((mapping) => [mapping.permissionId, mapping]),
+    );
+
+    const missingPermissionIds = validPermissionIds.filter(
+      (permissionId) => !existingPermissionIdSet.has(permissionId),
+    );
+
+    for (const permissionId of missingPermissionIds) {
+      const deletedMapping = deletedByPermissionId.get(permissionId);
+      if (deletedMapping) {
+        await this.rolePermissionRepository.restore(deletedMapping.id);
+        continue;
+      }
+      await this.rolePermissionRepository.save(
         this.rolePermissionRepository.create({
           roleId,
           permissionId,
         }),
       );
-
-    if (newMappings.length === 0) {
-      return existingMappings;
     }
-
-    return this.rolePermissionRepository.save(newMappings);
+    return this.rolePermissionRepository.find({
+      where: { roleId, permissionId: In(validPermissionIds), deletedAt: IsNull() },
+    });
   }
 
   async replacePermissionsByIds(
@@ -100,18 +147,11 @@ export class RoleService {
       throw new NotFoundException(ERROR_MESSAGES.RESOURCE_NOT_FOUND);
     }
 
-    await this.rolePermissionRepository.delete({ roleId });
+    await this.rolePermissionRepository.softDelete({ roleId });
 
     if (permissionIds.length === 0) {
       return;
     }
-
-    const mappings = permissionIds.map((permissionId) =>
-      this.rolePermissionRepository.create({
-        roleId,
-        permissionId,
-      }),
-    );
-    await this.rolePermissionRepository.save(mappings);
+    await this.assignPermissionsByIds(roleId, permissionIds);
   }
 }
