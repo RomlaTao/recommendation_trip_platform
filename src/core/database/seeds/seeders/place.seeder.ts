@@ -107,6 +107,9 @@ export class PlaceSeeder {
       place.categoryId = category.id;
       place.dataSource = PlaceDataSource.CSV_SEED;
       place.importBatchId = 'vungtau-csv-initial';
+      place.deletedReason = null;
+      place.deletedByUserId = null;
+      place.deletedByRole = null;
       place.averageRating ??= null;
       place.reviewCount ??= 0;
 
