@@ -9,10 +9,16 @@ import { Permission } from '../../../modules/permission/entities/permission.enti
 import { RolePermission } from '../../../modules/permission/entities/role-permission.entity';
 import { UserRole } from '../../../modules/permission/entities/user-role.entity';
 import { User } from '../../../modules/user/entities/user.entity';
+import { PartnerOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/partner.orm-entity.js';
+import { PlaceCategoryOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/place-category.orm-entity.js';
+import { PlaceOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/place.orm-entity.js';
 import { RoleSeeder } from './seeders/role.seeder';
 import { PermissionSeeder } from './seeders/permission.seeder';
 import { RolePermissionSeeder } from './seeders/role-permission.seeder';
 import { UserSeeder } from './seeders/user.seeder';
+import { PartnerSeeder } from './seeders/partner.seeder.js';
+import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
+import { PlaceSeeder } from './seeders/place.seeder.js';
 
 /**
  * Standalone NestJS module used only by the CLI seed runner (seed.ts).
@@ -37,15 +43,41 @@ import { UserSeeder } from './seeders/user.seeder';
           username: db.username,
           password: db.password,
           database: db.database,
-          entities: [Role, Permission, RolePermission, User, UserRole],
+          entities: [
+            Role,
+            Permission,
+            RolePermission,
+            User,
+            UserRole,
+            PartnerOrmEntity,
+            PlaceCategoryOrmEntity,
+            PlaceOrmEntity,
+          ],
           synchronize: false,
           logging: false,
         };
       },
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Role, Permission, RolePermission, User, UserRole]),
+    TypeOrmModule.forFeature([
+      Role,
+      Permission,
+      RolePermission,
+      User,
+      UserRole,
+      PartnerOrmEntity,
+      PlaceCategoryOrmEntity,
+      PlaceOrmEntity,
+    ]),
   ],
-  providers: [RoleSeeder, PermissionSeeder, RolePermissionSeeder, UserSeeder],
+  providers: [
+    RoleSeeder,
+    PermissionSeeder,
+    RolePermissionSeeder,
+    UserSeeder,
+    PartnerSeeder,
+    PlaceCategorySeeder,
+    PlaceSeeder,
+  ],
 })
 export class SeederModule {}
