@@ -11,6 +11,7 @@ import emailConfig from './core/config/email.config.js';
 import { AuthModule } from './core/auth/auth.module.js';
 import { UsersModule } from './modules/user/users.module.js';
 import { SeedOnStartModule } from './core/database/seeds/seed-on-start.module.js';
+import { PlaceModule } from './modules/place/place.module.js';
 
 /**
  * App Module — Root of the dependency graph
@@ -73,6 +74,7 @@ import { SeedOnStartModule } from './core/database/seeds/seed-on-start.module.js
     // ── Feature modules ───────────────────────────────────────────────────────
     AuthModule,
     UsersModule,
+    PlaceModule,
 
     // ── Startup seeding (development only) ────────────────────────────────────
     ...(process.env.SEED_ON_START === 'true' ? [SeedOnStartModule] : []),
