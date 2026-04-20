@@ -5,6 +5,9 @@ import { RoleSeeder } from './seeders/role.seeder';
 import { PermissionSeeder } from './seeders/permission.seeder';
 import { RolePermissionSeeder } from './seeders/role-permission.seeder';
 import { UserSeeder } from './seeders/user.seeder';
+import { PartnerSeeder } from './seeders/partner.seeder.js';
+import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
+import { PlaceSeeder } from './seeders/place.seeder.js';
 
 const logger = new Logger('Seed');
 
@@ -16,11 +19,14 @@ async function runSeeders(): Promise<void> {
   });
 
   try {
-    // Order matters: roles → permissions → role-permissions → users
+    // Order matters: auth seeds first, then place ownership/taxonomy/data import.
     await app.get(RoleSeeder).run();
     await app.get(PermissionSeeder).run();
     await app.get(RolePermissionSeeder).run();
     await app.get(UserSeeder).run();
+    await app.get(PartnerSeeder).run();
+    await app.get(PlaceCategorySeeder).run();
+    await app.get(PlaceSeeder).run();
 
     logger.log('All seeders completed successfully.');
   } catch (error) {
