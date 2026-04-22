@@ -44,6 +44,80 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Database migrations (local)
+
+Run migrations locally even when using a local database so your schema/indexes stay aligned with the codebase (especially catalog search and PostGIS/query-performance indexes).
+
+### 1) Start local services
+
+```bash
+# postgres + redis
+$ docker compose up -d
+
+# or postgres only
+$ docker compose up -d postgres
+```
+
+### 2) Ensure environment variables are set
+
+Required DB vars in `.env`:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `DB_DATABASE`
+
+### 3) Run migration command
+
+Run all pending migrations:
+
+```bash
+$ npm run migration:run
+```
+
+Useful migration commands:
+
+```bash
+# list executed/pending migrations
+$ npm run migration:show
+
+# revert last migration
+$ npm run migration:revert
+
+# create an empty migration template
+$ npm run migration:create
+```
+
+The migration CLI uses a dedicated CommonJS datasource (build step runs automatically, migrations run from `dist`):
+
+- `src/core/database/typeorm.datasource.cjs`
+
+Source datasource file:
+
+- `src/core/database/typeorm.datasource.ts`
+
+Reference migration file:
+
+- `src/core/database/migrations/1760000002000-OptimizePlaceCatalogSearchIndexes.ts`
+
+### 4) Verify migration results
+
+```sql
+SELECT extname FROM pg_extension WHERE extname = 'pg_trgm';
+
+SELECT indexname
+FROM pg_indexes
+WHERE tablename IN ('places', 'place_categories')
+ORDER BY indexname;
+```
+
+### Why this matters in local
+
+- Keeps local query plans consistent with team/staging environments.
+- Avoids false performance conclusions during `EXPLAIN ANALYZE`.
+- Ensures catalog keyword search (`ILIKE`) uses the intended trigram index path.
+
 ## Run tests
 
 ```bash
