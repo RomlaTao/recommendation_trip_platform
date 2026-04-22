@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../../../../core/database/base.entity.js';
 import { PlaceDataSource } from '../../../enums/place-data-source.enum.js';
 import { PlaceDeletionActorRole } from '../../../enums/place-deletion-actor-role.enum.js';
@@ -8,6 +8,15 @@ import { PartnerOrmEntity } from './partner.orm-entity.js';
 import { PlaceCategoryOrmEntity } from './place-category.orm-entity.js';
 
 @Entity('places')
+@Index('IDX_places_catalog_active_category_updated', ['categoryId', 'updatedAt'], {
+  where: `"deletedAt" IS NULL AND "status" = 'APPROVED'`,
+})
+@Index('IDX_places_catalog_active_rating_id', ['averageRating', 'id'], {
+  where: `"deletedAt" IS NULL AND "status" = 'APPROVED'`,
+})
+@Index('IDX_places_catalog_active_name_id', ['name', 'id'], {
+  where: `"deletedAt" IS NULL AND "status" = 'APPROVED'`,
+})
 export class PlaceOrmEntity extends BaseEntity {
   @ApiProperty()
   @Column({ type: 'varchar', length: 500 })
@@ -65,6 +74,10 @@ export class PlaceOrmEntity extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   reviewCount: number;
 
+  @ApiPropertyOptional()
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  ratingLastUpdatedAt?: Date | null;
+
   @ApiPropertyOptional({
     description: 'PostgreSQL allows multiple NULLs on a UNIQUE column when unset.',
   })
@@ -96,6 +109,7 @@ export class PlaceOrmEntity extends BaseEntity {
   deletedByRole?: PlaceDeletionActorRole | null;
 
   @ApiProperty()
+  @Index('IDX_places_partner_id')
   @Column({ type: 'uuid' })
   partnerId: string;
 
@@ -105,6 +119,7 @@ export class PlaceOrmEntity extends BaseEntity {
   partner: PartnerOrmEntity;
 
   @ApiProperty()
+  @Index('IDX_places_category_id')
   @Column({ type: 'uuid' })
   categoryId: string;
 
