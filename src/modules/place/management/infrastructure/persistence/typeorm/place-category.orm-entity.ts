@@ -6,6 +6,7 @@ import { BaseEntity } from '../../../../../../core/database/base.entity.js';
  * Hierarchical place taxonomy. Root categories have `parentId = null`.
  */
 @Entity('place_categories')
+@Index('IDX_place_categories_name', ['name'])
 export class PlaceCategoryOrmEntity extends BaseEntity {
   @ApiProperty({ example: 'Park' })
   @Column({ type: 'varchar', length: 255 })
