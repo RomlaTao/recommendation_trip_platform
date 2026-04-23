@@ -8,6 +8,7 @@ import { UserSeeder } from './seeders/user.seeder';
 import { PartnerSeeder } from './seeders/partner.seeder.js';
 import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
 import { PlaceSeeder } from './seeders/place.seeder.js';
+import { NotificationPreferenceSeeder } from './seeders/notification-preference.seeder.js';
 
 const logger = new Logger('Seed');
 
@@ -27,6 +28,7 @@ async function runSeeders(): Promise<void> {
     await app.get(PartnerSeeder).run();
     await app.get(PlaceCategorySeeder).run();
     await app.get(PlaceSeeder).run();
+    await app.get(NotificationPreferenceSeeder).run();
 
     logger.log('All seeders completed successfully.');
   } catch (error) {

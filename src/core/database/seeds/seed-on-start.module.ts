@@ -15,6 +15,8 @@ import { UserSeeder } from './seeders/user.seeder';
 import { PartnerSeeder } from './seeders/partner.seeder.js';
 import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
 import { PlaceSeeder } from './seeders/place.seeder.js';
+import { NotificationPreferenceEntity } from '../../../modules/notification/entities/notification-preference.entity.js';
+import { NotificationPreferenceSeeder } from './seeders/notification-preference.seeder.js';
 
 /**
  * Runs all seeders in dependency order right after the application has fully
@@ -35,6 +37,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
     private readonly partnerSeeder: PartnerSeeder,
     private readonly placeCategorySeeder: PlaceCategorySeeder,
     private readonly placeSeeder: PlaceSeeder,
+    private readonly notificationPreferenceSeeder: NotificationPreferenceSeeder,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -47,6 +50,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
       await this.partnerSeeder.run();
       await this.placeCategorySeeder.run();
       await this.placeSeeder.run();
+      await this.notificationPreferenceSeeder.run();
       this.logger.log('Startup seeding completed successfully.');
     } catch (error) {
       this.logger.error(
@@ -72,6 +76,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
       PartnerOrmEntity,
       PlaceCategoryOrmEntity,
       PlaceOrmEntity,
+      NotificationPreferenceEntity,
     ]),
   ],
   providers: [
@@ -82,6 +87,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
     PartnerSeeder,
     PlaceCategorySeeder,
     PlaceSeeder,
+    NotificationPreferenceSeeder,
     SeedOnStartService,
   ],
 })

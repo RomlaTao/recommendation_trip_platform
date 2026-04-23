@@ -10,6 +10,12 @@ import {
 } from '../notification.constants.js';
 import { NotificationDeliveryEntity } from '../entities/notification-delivery.entity.js';
 import { SendEmailNotificationJobPayload } from '../notification.types.js';
+import {
+  PlaceApprovedNotificationPayload,
+  PlaceRequestSubmittedNotificationPayload,
+  PlaceRejectedNotificationPayload,
+  VerifyEmailNotificationPayload,
+} from '../notification.types.js';
 import { NotificationEmailService } from '../services/notification-email.service.js';
 
 @Processor(NOTIFICATION_QUEUE_NAME)
@@ -32,7 +38,24 @@ export class NotificationProcessor {
     try {
       switch (job.data.templateCode) {
         case NOTIFICATION_TEMPLATES.AUTH_VERIFY_EMAIL:
-          await this.notificationEmailService.sendVerifyEmail(job.data.payload);
+          await this.notificationEmailService.sendVerifyEmail(
+            job.data.payload as VerifyEmailNotificationPayload,
+          );
+          break;
+        case NOTIFICATION_TEMPLATES.PLACE_APPROVED:
+          await this.notificationEmailService.sendPlaceApprovedEmail(
+            job.data.payload as PlaceApprovedNotificationPayload,
+          );
+          break;
+        case NOTIFICATION_TEMPLATES.PLACE_REJECTED:
+          await this.notificationEmailService.sendPlaceRejectedEmail(
+            job.data.payload as PlaceRejectedNotificationPayload,
+          );
+          break;
+        case NOTIFICATION_TEMPLATES.PLACE_REQUEST_SUBMITTED:
+          await this.notificationEmailService.sendPlaceRequestSubmittedEmail(
+            job.data.payload as PlaceRequestSubmittedNotificationPayload,
+          );
           break;
         default:
           throw new Error(`unsupported_notification_template:${job.data.templateCode}`);

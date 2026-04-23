@@ -19,6 +19,8 @@ import { UserSeeder } from './seeders/user.seeder';
 import { PartnerSeeder } from './seeders/partner.seeder.js';
 import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
 import { PlaceSeeder } from './seeders/place.seeder.js';
+import { NotificationPreferenceEntity } from '../../../modules/notification/entities/notification-preference.entity.js';
+import { NotificationPreferenceSeeder } from './seeders/notification-preference.seeder.js';
 
 /**
  * Standalone NestJS module used only by the CLI seed runner (seed.ts).
@@ -52,6 +54,7 @@ import { PlaceSeeder } from './seeders/place.seeder.js';
             PartnerOrmEntity,
             PlaceCategoryOrmEntity,
             PlaceOrmEntity,
+            NotificationPreferenceEntity,
           ],
           synchronize: false,
           logging: false,
@@ -68,6 +71,7 @@ import { PlaceSeeder } from './seeders/place.seeder.js';
       PartnerOrmEntity,
       PlaceCategoryOrmEntity,
       PlaceOrmEntity,
+      NotificationPreferenceEntity,
     ]),
   ],
   providers: [
@@ -78,6 +82,7 @@ import { PlaceSeeder } from './seeders/place.seeder.js';
     PartnerSeeder,
     PlaceCategorySeeder,
     PlaceSeeder,
+    NotificationPreferenceSeeder,
   ],
 })
 export class SeederModule {}

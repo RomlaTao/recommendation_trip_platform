@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity, Index } from 'typeorm';
 import { BaseEntity } from '../../../../../../core/database/base.entity.js';
 
@@ -15,4 +15,9 @@ export class PartnerOrmEntity extends BaseEntity {
   @Index({ unique: true })
   @Column({ type: 'varchar', length: 100 })
   slug: string;
+
+  @ApiPropertyOptional({ format: 'uuid' })
+  @Index({ unique: true })
+  @Column({ type: 'uuid', nullable: true })
+  ownerUserId?: string | null;
 }
