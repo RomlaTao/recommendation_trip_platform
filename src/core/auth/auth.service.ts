@@ -62,35 +62,30 @@ export class AuthService {
   async register(
     dto: RegisterDto,
   ): Promise<RegisterResult> {
-    try {
-      const existing = await this.usersService.findByEmail(dto.email);
-      if (existing) {
-        throw new ConflictException(ERROR_MESSAGES.CONFLICT);
-      }
+    const existing = await this.usersService.findByEmail(dto.email);
+    if (existing) {
+      throw new ConflictException(ERROR_MESSAGES.CONFLICT);
+    }
 
-      if (dto.password !== dto.passwordConfirmation) {
-        throw new BadRequestException(ERROR_MESSAGES.VALIDATION_FAILED);
-      }
-
-      const passwordHash = await this._hashing(dto.password);
-      const createdUser = await this.usersService.createLocalUser({
-        email: dto.email,
-        passwordHash,
-        username: dto.username,
-        isActive: false,
-      });
-      const defaultRoleCode = this.configService.get<string>(
-        'DEFAULT_USER_ROLE_CODE',
-        'USER',
-      );
-      await this.userRoleService.assignRolesByCodes(createdUser.id, [defaultRoleCode]);
-      await this._issueVerifyEmailToken(createdUser.id, dto.email, dto.username);
-
-      return null;
-
-    } catch (error) {
+    if (dto.password !== dto.passwordConfirmation) {
       throw new BadRequestException(ERROR_MESSAGES.VALIDATION_FAILED);
     }
+
+    const passwordHash = await this._hashing(dto.password);
+    const createdUser = await this.usersService.createLocalUser({
+      email: dto.email,
+      passwordHash,
+      username: dto.username,
+      isActive: false,
+    });
+    const defaultRoleCode = this.configService.get<string>(
+      'DEFAULT_USER_ROLE_CODE',
+      'USER',
+    );
+    await this.userRoleService.assignRolesByCodes(createdUser.id, [defaultRoleCode]);
+    await this._issueVerifyEmailToken(createdUser.id, dto.email, dto.username);
+
+    return null;
   }
 
   async login(dto: LoginDto): Promise<LoginResult> {

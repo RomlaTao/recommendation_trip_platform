@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createHash } from 'crypto';
 import { IsNull, Repository } from 'typeorm';
 import { UsersService } from '../../user/users.service.js';
 import {
@@ -38,7 +39,11 @@ export class NotificationService {
   ) {}
 
   async notifyVerifyEmail(payload: VerifyEmailNotificationPayload): Promise<void> {
-    const sourceEventId = `auth_verify_email:${payload.to}:${payload.verifyToken}`;
+    const sourceEventId = this.buildSourceEventId(
+      'auth_verify_email',
+      payload.to.trim().toLowerCase(),
+      payload.verifyToken,
+    );
     const existing = await this.deliveryRepository.findOne({ where: { sourceEventId } });
     if (existing) {
       return;
@@ -72,7 +77,11 @@ export class NotificationService {
       to: user.email,
       placeId: input.placeId,
     };
-    const sourceEventId = `place_approved:${input.placeId}:${input.actorUserId}`;
+    const sourceEventId = this.buildSourceEventId(
+      'place_approved',
+      input.placeId,
+      input.actorUserId,
+    );
     const preference = await this.resolvePreference(
       input.actorUserId,
       NOTIFICATION_PREFERENCE_TYPES.PLACE_APPROVED,
@@ -107,7 +116,11 @@ export class NotificationService {
       placeId: input.placeId,
       reason: input.reason,
     };
-    const sourceEventId = `place_rejected:${input.placeId}:${input.actorUserId}`;
+    const sourceEventId = this.buildSourceEventId(
+      'place_rejected',
+      input.placeId,
+      input.actorUserId,
+    );
     const preference = await this.resolvePreference(
       input.actorUserId,
       NOTIFICATION_PREFERENCE_TYPES.PLACE_REJECTED,
@@ -144,7 +157,11 @@ export class NotificationService {
       placeName: input.placeName,
       requesterUserId: input.requesterUserId,
     };
-    const sourceEventId = `place_request_submitted:${input.requestId}:${input.recipientUserId}`;
+    const sourceEventId = this.buildSourceEventId(
+      'place_request_submitted',
+      input.requestId,
+      input.recipientUserId,
+    );
 
     await this.createDeliveryAndEnqueue(
       sourceEventId,
@@ -335,5 +352,11 @@ export class NotificationService {
       emailEnabled: existing.emailEnabled,
       inAppEnabled: existing.inAppEnabled,
     };
+  }
+
+  private buildSourceEventId(prefix: string, ...parts: string[]): string {
+    const raw = parts.join(':');
+    const digest = createHash('sha256').update(raw).digest('hex');
+    return `${prefix}:${digest}`;
   }
 }
