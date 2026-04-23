@@ -9,7 +9,6 @@ import { PlaceManagementModule } from '../management/management.module.js';
 import { PlaceCatalogController } from './presentation/controllers/place-catalog.controller.js';
 import { NearbyRateLimitGuard } from './presentation/guards/nearby-rate-limit.guard.js';
 import { PlaceRatingSnapshotConsumer } from './infrastructure/events/place-rating-snapshot.consumer.js';
-import { PlaceRatingSnapshotReconciliationScheduler } from './infrastructure/events/place-rating-snapshot-reconciliation.scheduler.js';
 import { PlaceRatingSnapshotEventOrmEntity } from './infrastructure/persistence/typeorm/place-rating-snapshot-event.orm-entity.js';
 import { PlaceOrmEntity } from '../management/infrastructure/persistence/typeorm/place.orm-entity.js';
 import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.events.js';
@@ -31,7 +30,6 @@ import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.event
     PlaceCatalogService,
     PlaceRatingSnapshotService,
     PlaceRatingSnapshotConsumer,
-    PlaceRatingSnapshotReconciliationScheduler,
     NearbyRateLimitGuard,
     {
       provide: PLACE_CATALOG_REPOSITORY,

@@ -44,7 +44,7 @@ export class PartnerPlaceController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermissions('places:create')
+  @RequirePermissions('places_partner:create')
   @ApiOperation({ summary: 'Partner creates a place in DRAFT' })
   create(
     @Body() dto: CreatePlaceDto,
@@ -54,7 +54,7 @@ export class PartnerPlaceController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:update')
+  @RequirePermissions('places_partner:update')
   @ApiOperation({ summary: 'Partner updates own draft/rejected place' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async update(
@@ -75,7 +75,7 @@ export class PartnerPlaceController {
 
   @Post(':id/submit')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:update')
+  @RequirePermissions('places_partner:update')
   @ApiOperation({ summary: 'Partner submits place for moderation' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async submit(
@@ -95,7 +95,7 @@ export class PartnerPlaceController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:read')
+  @RequirePermissions('places_partner:read')
   @ApiOperation({ summary: 'Get place detail (partner management view)' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   getById(@Param('id', new ParseUUIDPipe()) placeId: string) {
@@ -104,7 +104,7 @@ export class PartnerPlaceController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RequirePermissions('places:delete')
+  @RequirePermissions('places_partner:delete')
   @ApiOperation({ summary: 'Partner soft-deletes own place' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async remove(
@@ -124,7 +124,7 @@ export class PartnerPlaceController {
 
   @Patch(':id/restore')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:delete')
+  @RequirePermissions('places_partner:delete')
   @ApiOperation({ summary: 'Partner restores own soft-deleted place' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async restore(
