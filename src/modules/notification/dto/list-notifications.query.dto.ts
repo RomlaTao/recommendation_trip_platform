@@ -1,0 +1,23 @@
+import { Transform } from 'class-transformer';
+import { IsBoolean, IsInt, IsOptional, Max, Min } from 'class-validator';
+
+export class ListNotificationsQueryDto {
+  @Transform(({ value }) => Number(value ?? 1))
+  @IsInt()
+  @Min(1)
+  page = 1;
+
+  @Transform(({ value }) => Number(value ?? 20))
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit = 20;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined) return undefined;
+    return value === 'true' || value === true;
+  })
+  @IsBoolean()
+  isRead?: boolean;
+}
