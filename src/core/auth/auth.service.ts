@@ -19,7 +19,7 @@ import {
   USER_TOKEN_TYPES,
   UserTokenEntity,
 } from '../../modules/user/entities/user-token.entity.js';
-import { EmailQueueService } from '../../modules/email/email.queue.service.js';
+import { NotificationService } from '../../modules/notification/services/notification.service.js';
 import { UserRoleService } from '../../modules/permission/services/user-role.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -47,7 +47,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly emailQueueService: EmailQueueService,
+    private readonly notificationService: NotificationService,
     private readonly userRoleService: UserRoleService,
     private readonly configService: ConfigService,
     @InjectRepository(UserTokenEntity)
@@ -250,7 +250,7 @@ export class AuthService {
       }),
     );
 
-    await this.emailQueueService.enqueueVerifyEmail({
+    await this.notificationService.notifyVerifyEmail({
       to: email,
       username,
       verifyToken,
