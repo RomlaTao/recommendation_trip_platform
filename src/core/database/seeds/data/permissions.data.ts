@@ -14,11 +14,13 @@ const RESOURCE_ACTIONS: Record<string, string[]> = {
   permissions: ['read', 'create', 'update', 'delete'],
   trips: ['read', 'create', 'update', 'delete'],
   places_catalog: ['read'],
-  places_partner: ['read', 'create', 'update', 'delete'],
+  places_user: ['create'],
+  places_partner: ['read', 'update', 'delete'],
   places_admin: ['read', 'approve', 'delete'],
   reviews: ['read', 'create', 'update', 'delete'],
   itineraries: ['read', 'create', 'update', 'delete'],
   categories: ['read', 'create', 'update', 'delete'],
+  notifications: ['read', 'update'],
 };
 
 export const PERMISSIONS_SEED_DATA: PermissionSeedData[] = Object.entries(
@@ -50,8 +52,8 @@ export const ROLE_PERMISSION_MAP: Record<string, string[]> = {
     'trips:update',
     'trips:delete',
     'places_catalog:read',
+    'places_user:create',
     'places_partner:read',
-    'places_partner:create',
     'places_partner:update',
     'places_partner:delete',
     'places_admin:read',
@@ -69,6 +71,8 @@ export const ROLE_PERMISSION_MAP: Record<string, string[]> = {
     'categories:create',
     'categories:update',
     'categories:delete',
+    'notifications:read',
+    'notifications:update',
   ],
 
   USER: [
@@ -77,6 +81,7 @@ export const ROLE_PERMISSION_MAP: Record<string, string[]> = {
     'trips:update',
     'trips:delete',
     'places_catalog:read',
+    'places_user:create',
     'reviews:read',
     'reviews:create',
     'reviews:update',
@@ -86,5 +91,7 @@ export const ROLE_PERMISSION_MAP: Record<string, string[]> = {
     'itineraries:update',
     'itineraries:delete',
     'categories:read',
+    'notifications:read',
+    'notifications:update',
   ],
 };

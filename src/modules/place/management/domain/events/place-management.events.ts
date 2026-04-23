@@ -38,6 +38,16 @@ export class PlaceSubmittedEvent extends BasePlaceManagementEvent {
   }
 }
 
+export class PlaceRegistrationRequestSubmittedEvent extends BasePlaceManagementEvent {
+  constructor(
+    public readonly requestId: string,
+    public readonly requesterUserId: string,
+    public readonly placeName: string,
+  ) {
+    super('PlaceRegistrationRequestSubmittedEvent', requestId);
+  }
+}
+
 export class PlaceApprovedEvent extends BasePlaceManagementEvent {
   constructor(
     public readonly placeId: string,

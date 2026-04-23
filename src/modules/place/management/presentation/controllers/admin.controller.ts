@@ -8,22 +8,24 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../../../common/decorators/current-user.decorator.js';
 import { RequirePermissions } from '../../../../../common/decorators/require-permissions.decorator.js';
 import type { JwtRequestUser } from '../../../../../common/interfaces/jwt-payload.interface.js';
 import { JwtAuthGuard } from '../../../../../core/guards/jwt-auth.guard.js';
 import { PermissionGuard } from '../../../../../core/guards/permission.guard.js';
-import { ApprovePlaceUseCase } from '../../application/use-cases/approve-place.use-case.js';
-import { RejectPlaceUseCase } from '../../application/use-cases/reject-place.use-case.js';
 import { DeletePlaceByAdminUseCase } from '../../application/use-cases/delete-place-by-admin.use-case.js';
 import { RestorePlaceByAdminUseCase } from '../../application/use-cases/restore-place-by-admin.use-case.js';
 import { GetPlaceUseCase } from '../../application/use-cases/get-place.use-case.js';
-import { ApprovePlaceDto } from '../dtos/approve-place.dto.js';
-import { RejectPlaceDto } from '../dtos/reject-place.dto.js';
 import { DeletePlaceDto } from '../dtos/delete-place.dto.js';
+import { ListPlaceRegistrationRequestsForAdminUseCase } from '../../application/use-cases/list-place-registration-requests-for-admin.use-case.js';
+import { ApprovePlaceRegistrationRequestUseCase } from '../../application/use-cases/approve-place-registration-request.use-case.js';
+import { RejectPlaceRegistrationRequestUseCase } from '../../application/use-cases/reject-place-registration-request.use-case.js';
+import { ListPlaceRegistrationRequestsQueryDto } from '../dtos/list-place-registration-requests.query.dto.js';
+import { RejectPlaceRegistrationRequestDto } from '../dtos/reject-place-registration-request.dto.js';
 
 @ApiTags('Place Management - Admin')
 @ApiBearerAuth()
@@ -31,51 +33,13 @@ import { DeletePlaceDto } from '../dtos/delete-place.dto.js';
 @UseGuards(JwtAuthGuard, PermissionGuard)
 export class AdminPlaceController {
   constructor(
-    private readonly approvePlaceUseCase: ApprovePlaceUseCase,
-    private readonly rejectPlaceUseCase: RejectPlaceUseCase,
     private readonly deletePlaceByAdminUseCase: DeletePlaceByAdminUseCase,
     private readonly restorePlaceByAdminUseCase: RestorePlaceByAdminUseCase,
     private readonly getPlaceUseCase: GetPlaceUseCase,
+    private readonly listPlaceRegistrationRequestsForAdminUseCase: ListPlaceRegistrationRequestsForAdminUseCase,
+    private readonly approvePlaceRegistrationRequestUseCase: ApprovePlaceRegistrationRequestUseCase,
+    private readonly rejectPlaceRegistrationRequestUseCase: RejectPlaceRegistrationRequestUseCase,
   ) {}
-
-  @Patch(':id/approve')
-  @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places_admin:approve')
-  @ApiOperation({ summary: 'Approve a pending place' })
-  @ApiParam({ name: 'id', type: String, format: 'uuid' })
-  async approve(
-    @Param('id', new ParseUUIDPipe()) placeId: string,
-    @Body() _dto: ApprovePlaceDto,
-    @CurrentUser() currentUser: JwtRequestUser,
-  ): Promise<void> {
-    await this.approvePlaceUseCase.execute({
-      placeId,
-      actor: {
-        userId: currentUser.sub,
-        permissions: currentUser.permissions,
-      },
-    });
-  }
-
-  @Patch(':id/reject')
-  @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places_admin:approve')
-  @ApiOperation({ summary: 'Reject a pending place with reason' })
-  @ApiParam({ name: 'id', type: String, format: 'uuid' })
-  async reject(
-    @Param('id', new ParseUUIDPipe()) placeId: string,
-    @Body() dto: RejectPlaceDto,
-    @CurrentUser() currentUser: JwtRequestUser,
-  ): Promise<void> {
-    await this.rejectPlaceUseCase.execute({
-      placeId,
-      reason: dto.reason,
-      actor: {
-        userId: currentUser.sub,
-        permissions: currentUser.permissions,
-      },
-    });
-  }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -122,5 +86,45 @@ export class AdminPlaceController {
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   getById(@Param('id', new ParseUUIDPipe()) placeId: string) {
     return this.getPlaceUseCase.execute(placeId);
+  }
+
+  @Get('/requests/list')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('places_admin:read')
+  @ApiOperation({ summary: 'List place registration requests for moderation' })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  listRequests(@Query() query: ListPlaceRegistrationRequestsQueryDto) {
+    return this.listPlaceRegistrationRequestsForAdminUseCase.execute(query);
+  }
+
+  @Patch('/requests/:requestId/approve')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('places_admin:approve')
+  @ApiOperation({ summary: 'Approve a place registration request' })
+  @ApiParam({ name: 'requestId', type: String, format: 'uuid' })
+  approveRequest(
+    @Param('requestId', new ParseUUIDPipe()) requestId: string,
+    @CurrentUser() currentUser: JwtRequestUser,
+  ) {
+    return this.approvePlaceRegistrationRequestUseCase.execute(requestId, currentUser.sub);
+  }
+
+  @Patch('/requests/:requestId/reject')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions('places_admin:approve')
+  @ApiOperation({ summary: 'Reject a place registration request with reason' })
+  @ApiParam({ name: 'requestId', type: String, format: 'uuid' })
+  rejectRequest(
+    @Param('requestId', new ParseUUIDPipe()) requestId: string,
+    @Body() dto: RejectPlaceRegistrationRequestDto,
+    @CurrentUser() currentUser: JwtRequestUser,
+  ) {
+    return this.rejectPlaceRegistrationRequestUseCase.execute(
+      requestId,
+      currentUser.sub,
+      dto.reason,
+    );
   }
 }

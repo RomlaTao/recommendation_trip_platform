@@ -17,11 +17,9 @@ import { CurrentUser } from '../../../../../common/decorators/current-user.decor
 import { JwtAuthGuard } from '../../../../../core/guards/jwt-auth.guard.js';
 import { PermissionGuard } from '../../../../../core/guards/permission.guard.js';
 import type { JwtRequestUser } from '../../../../../common/interfaces/jwt-payload.interface.js';
-import { CreatePlaceDto } from '../dtos/create-place.dto.js';
 import { UpdatePlaceDto } from '../dtos/update-place.dto.js';
 import { SubmitPlaceDto } from '../dtos/submit-place.dto.js';
 import { DeleteOwnPlaceDto } from '../dtos/delete-own-place.dto.js';
-import { CreatePlaceUseCase } from '../../application/use-cases/create-place.use-case.js';
 import { UpdatePlaceUseCase } from '../../application/use-cases/update-place.use-case.js';
 import { SubmitPlaceUseCase } from '../../application/use-cases/submit-place.use-case.js';
 import { GetPlaceUseCase } from '../../application/use-cases/get-place.use-case.js';
@@ -34,23 +32,12 @@ import { RestoreOwnPlaceUseCase } from '../../application/use-cases/restore-own-
 @UseGuards(JwtAuthGuard, PermissionGuard)
 export class PartnerPlaceController {
   constructor(
-    private readonly createPlaceUseCase: CreatePlaceUseCase,
     private readonly updatePlaceUseCase: UpdatePlaceUseCase,
     private readonly submitPlaceUseCase: SubmitPlaceUseCase,
     private readonly getPlaceUseCase: GetPlaceUseCase,
     private readonly deleteOwnPlaceUseCase: DeleteOwnPlaceUseCase,
     private readonly restoreOwnPlaceUseCase: RestoreOwnPlaceUseCase,
   ) {}
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @RequirePermissions('places_partner:create')
-  @ApiOperation({ summary: 'Partner creates a place in DRAFT' })
-  create(
-    @Body() dto: CreatePlaceDto,
-  ): Promise<{ id: string }> {
-    return this.createPlaceUseCase.execute(dto);
-  }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
