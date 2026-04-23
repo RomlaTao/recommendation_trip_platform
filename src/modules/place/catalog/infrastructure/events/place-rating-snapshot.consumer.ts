@@ -1,9 +1,9 @@
 import { OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  APPLY_REVIEW_EVENT_JOB,
+  APPLY_PLACE_RATING_UPDATED_JOB,
   PLACE_RATING_SNAPSHOT_QUEUE,
-  PlaceReviewDomainEvent,
+  PlaceRatingUpdatedDomainEvent,
 } from '../../../shared/events/place-review.events.js';
 import { PlaceRatingSnapshotService } from '../../application/services/place-rating-snapshot.service.js';
 
@@ -14,16 +14,16 @@ export class PlaceRatingSnapshotConsumer {
 
   constructor(private readonly snapshotService: PlaceRatingSnapshotService) {}
 
-  @Process(APPLY_REVIEW_EVENT_JOB)
-  async handleApplyReviewEvent(job: any): Promise<void> {
-    const typedJob = job as { data: PlaceReviewDomainEvent };
-    await this.snapshotService.applyReviewEvent(typedJob.data);
+  @Process(APPLY_PLACE_RATING_UPDATED_JOB)
+  async handleApplyPlaceRatingUpdated(job: any): Promise<void> {
+    const typedJob = job as { data: PlaceRatingUpdatedDomainEvent };
+    await this.snapshotService.applyPlaceRatingUpdatedEvent(typedJob.data);
   }
 
   @OnQueueFailed()
   async handleFailed(job: any, error: Error): Promise<void> {
     const typedJob = job as {
-      data: PlaceReviewDomainEvent;
+      data: PlaceRatingUpdatedDomainEvent;
       opts: { attempts?: number };
       attemptsMade: number;
     };
@@ -31,7 +31,7 @@ export class PlaceRatingSnapshotConsumer {
     if (typedJob.attemptsMade >= maxAttempts) {
       await this.snapshotService.markEventDeadLetter(typedJob.data, error);
       this.logger.error(
-        `Review event moved to dead-letter: eventId=${typedJob.data.metadata.eventId} error=${error.message}`,
+        `Place rating updated event moved to dead-letter: eventId=${typedJob.data.metadata.eventId} error=${error.message}`,
       );
     }
   }

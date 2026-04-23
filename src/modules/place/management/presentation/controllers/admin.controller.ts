@@ -40,7 +40,7 @@ export class AdminPlaceController {
 
   @Patch(':id/approve')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:approve')
+  @RequirePermissions('places_admin:approve')
   @ApiOperation({ summary: 'Approve a pending place' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async approve(
@@ -59,7 +59,7 @@ export class AdminPlaceController {
 
   @Patch(':id/reject')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:approve')
+  @RequirePermissions('places_admin:approve')
   @ApiOperation({ summary: 'Reject a pending place with reason' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async reject(
@@ -79,7 +79,7 @@ export class AdminPlaceController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RequirePermissions('places:delete')
+  @RequirePermissions('places_admin:delete')
   @ApiOperation({ summary: 'Soft-delete a place with moderation reason (admin)' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async remove(
@@ -99,7 +99,7 @@ export class AdminPlaceController {
 
   @Patch(':id/restore')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:delete')
+  @RequirePermissions('places_admin:delete')
   @ApiOperation({ summary: 'Restore a soft-deleted place (admin)' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async restore(
@@ -117,7 +117,7 @@ export class AdminPlaceController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('places:read')
+  @RequirePermissions('places_admin:read')
   @ApiOperation({ summary: 'Get place detail (admin management view)' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   getById(@Param('id', new ParseUUIDPipe()) placeId: string) {

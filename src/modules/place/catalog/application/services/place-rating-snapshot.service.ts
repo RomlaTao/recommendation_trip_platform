@@ -1,31 +1,26 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, Logger } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
-import { PlaceOrmEntity } from '../../../management/infrastructure/persistence/typeorm/place.orm-entity.js';
+import { Repository } from 'typeorm';
 import { PlaceRatingSnapshotEventOrmEntity } from '../../infrastructure/persistence/typeorm/place-rating-snapshot-event.orm-entity.js';
-import { PlaceReviewDomainEvent } from '../../../shared/events/place-review.events.js';
+import { PlaceRatingUpdatedDomainEvent } from '../../../shared/events/place-review.events.js';
 
 @Injectable()
 export class PlaceRatingSnapshotService {
   private readonly logger = new Logger(PlaceRatingSnapshotService.name);
 
   constructor(
-    private readonly dataSource: DataSource,
-    @InjectRepository(PlaceOrmEntity)
-    private readonly placeRepository: Repository<PlaceOrmEntity>,
     @InjectRepository(PlaceRatingSnapshotEventOrmEntity)
     private readonly snapshotEventRepository: Repository<PlaceRatingSnapshotEventOrmEntity>,
   ) {}
 
-  async applyReviewEvent(event: PlaceReviewDomainEvent): Promise<void> {
+  async applyPlaceRatingUpdatedEvent(event: PlaceRatingUpdatedDomainEvent): Promise<void> {
     const inserted = await this.tryStartInboxEvent(event);
     if (!inserted) {
-      this.logger.debug(`Skip duplicated review event ${event.metadata.eventId}`);
+      this.logger.debug(`Skip duplicated place rating updated event ${event.metadata.eventId}`);
       return;
     }
 
     try {
-      await this.recalculatePlaceRatingSnapshot(event.payload.placeId);
       const processedEvent = await this.snapshotEventRepository.findOne({
         where: { eventId: event.metadata.eventId },
         select: { attempts: true },
@@ -45,7 +40,7 @@ export class PlaceRatingSnapshotService {
     }
   }
 
-  async markEventDeadLetter(event: PlaceReviewDomainEvent, error: unknown): Promise<void> {
+  async markEventDeadLetter(event: PlaceRatingUpdatedDomainEvent, error: unknown): Promise<void> {
     await this.snapshotEventRepository.update(
       { eventId: event.metadata.eventId },
       {
@@ -56,35 +51,7 @@ export class PlaceRatingSnapshotService {
     );
   }
 
-  async reconcile(limit = 100): Promise<number> {
-    // Rebuild snapshots for places whose reviews changed after last snapshot timestamp.
-    // Use r.updatedAt (including soft-deleted reviews) to recover when delete events were missed.
-    const candidates = await this.dataSource.query(
-      `
-      SELECT p."id"
-      FROM "places" p
-      WHERE EXISTS (
-        SELECT 1
-        FROM "place_reviews" r
-        WHERE r."placeId" = p."id"
-          AND (
-            p."ratingLastUpdatedAt" IS NULL
-            OR r."updatedAt" > p."ratingLastUpdatedAt"
-          )
-      )
-      LIMIT $1
-      `,
-      [limit],
-    );
-
-    for (const row of candidates as Array<{ id: string }>) {
-      await this.recalculatePlaceRatingSnapshot(row.id);
-    }
-
-    return candidates.length;
-  }
-
-  private async tryStartInboxEvent(event: PlaceReviewDomainEvent): Promise<boolean> {
+  private async tryStartInboxEvent(event: PlaceRatingUpdatedDomainEvent): Promise<boolean> {
     const result = await this.snapshotEventRepository
       .createQueryBuilder()
       .insert()
@@ -103,32 +70,7 @@ export class PlaceRatingSnapshotService {
     return (result.raw?.rowCount ?? 0) > 0;
   }
 
-  private async recalculatePlaceRatingSnapshot(placeId: string): Promise<void> {
-    const [result] = (await this.dataSource.query(
-      `
-      SELECT
-        AVG(r."rating")::numeric(3,2) AS "averageRating",
-        COUNT(1)::int AS "reviewCount"
-      FROM "place_reviews" r
-      WHERE r."placeId" = $1
-        AND r."deletedAt" IS NULL
-      `,
-      [placeId],
-    )) as Array<{ averageRating: string | null; reviewCount: number }>;
-
-    await this.placeRepository
-      .createQueryBuilder()
-      .update(PlaceOrmEntity)
-      .set({
-        averageRating: result.averageRating,
-        reviewCount: Number(result.reviewCount ?? 0),
-        ratingLastUpdatedAt: new Date(),
-      })
-      .where('"id" = :placeId', { placeId })
-      .execute();
-  }
-
-  private async markEventFailed(event: PlaceReviewDomainEvent, error: unknown): Promise<void> {
+  private async markEventFailed(event: PlaceRatingUpdatedDomainEvent, error: unknown): Promise<void> {
     await this.snapshotEventRepository
       .createQueryBuilder()
       .update()

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 export const PLACE_RATING_SNAPSHOT_QUEUE = 'place-rating-snapshot';
 export const APPLY_REVIEW_EVENT_JOB = 'apply-review-event';
+export const APPLY_PLACE_RATING_UPDATED_JOB = 'apply-place-rating-updated';
 export const RECONCILE_RATING_SNAPSHOT_JOB = 'reconcile-rating-snapshot';
 
 export interface PlaceReviewEventMetadata {
@@ -39,6 +40,28 @@ export interface PlaceReviewDomainEvent<TPayload extends PlaceReviewEventPayload
   payload: TPayload;
 }
 
+export interface PlaceRatingUpdatedEventMetadata {
+  eventId: string;
+  eventType: 'PlaceRatingUpdated';
+  eventVersion: number;
+  aggregateType: 'PLACE';
+  aggregateId: string;
+  occurredAt: Date;
+}
+
+export interface PlaceRatingUpdatedEventPayload {
+  placeId: string;
+  averageRating: string | null;
+  reviewCount: number;
+  ratingLastUpdatedAt: Date;
+  sourceReviewEventId?: string;
+}
+
+export interface PlaceRatingUpdatedDomainEvent {
+  metadata: PlaceRatingUpdatedEventMetadata;
+  payload: PlaceRatingUpdatedEventPayload;
+}
+
 export function createReviewCreatedEvent(payload: ReviewCreatedEvent): PlaceReviewDomainEvent<ReviewCreatedEvent> {
   return {
     metadata: createMetadata('ReviewCreated', payload.reviewId),
@@ -56,6 +79,22 @@ export function createReviewUpdatedEvent(payload: ReviewUpdatedEvent): PlaceRevi
 export function createReviewDeletedEvent(payload: ReviewDeletedEvent): PlaceReviewDomainEvent<ReviewDeletedEvent> {
   return {
     metadata: createMetadata('ReviewDeleted', payload.reviewId),
+    payload,
+  };
+}
+
+export function createPlaceRatingUpdatedEvent(
+  payload: PlaceRatingUpdatedEventPayload,
+): PlaceRatingUpdatedDomainEvent {
+  return {
+    metadata: {
+      eventId: randomUUID(),
+      eventType: 'PlaceRatingUpdated',
+      eventVersion: 1,
+      aggregateType: 'PLACE',
+      aggregateId: payload.placeId,
+      occurredAt: new Date(),
+    },
     payload,
   };
 }

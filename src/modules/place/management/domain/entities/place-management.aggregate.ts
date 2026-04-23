@@ -63,11 +63,11 @@ export interface UpdatePlaceInput {
 }
 
 function hasAdminApprovePermission(actor: PlaceActorContext): boolean {
-  return actor.permissions.includes('places:approve');
+  return actor.permissions.includes('places_admin:approve');
 }
 
 function hasAdminDeletePermission(actor: PlaceActorContext): boolean {
-  return actor.permissions.includes('places:delete');
+  return actor.permissions.includes('places_admin:delete');
 }
 
 export class PlaceManagementAggregate {
