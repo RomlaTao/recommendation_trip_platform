@@ -5,7 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from '../../modules/user/users.module.js';
 import { UserTokenEntity } from '../../modules/user/entities/user-token.entity.js';
-import { EmailModule } from '../../modules/email/email.module.js';
+import { NotificationModule } from '../../modules/notification/notification.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
@@ -27,7 +27,7 @@ import { PermissionModule } from '../../modules/permission/permission.module.js'
 @Module({
   imports: [
     UsersModule,
-    EmailModule,
+    NotificationModule,
     TypeOrmModule.forFeature([UserTokenEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
