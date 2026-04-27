@@ -12,6 +12,7 @@ import { AuthModule } from './core/auth/auth.module.js';
 import { UsersModule } from './modules/user/users.module.js';
 import { SeedOnStartModule } from './core/database/seeds/seed-on-start.module.js';
 import { PlaceModule } from './modules/place/place.module.js';
+import { TripModule } from './modules/trip/trip.module.js';
 
 /**
  * App Module — Root of the dependency graph
@@ -75,6 +76,7 @@ import { PlaceModule } from './modules/place/place.module.js';
     AuthModule,
     UsersModule,
     PlaceModule,
+    TripModule,
 
     // ── Startup seeding (development only) ────────────────────────────────────
     ...(process.env.SEED_ON_START === 'true' ? [SeedOnStartModule] : []),
