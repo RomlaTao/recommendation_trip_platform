@@ -11,7 +11,12 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { RequirePermissions } from '../../../../../common/decorators/require-permissions.decorator.js';
 import { CurrentUser } from '../../../../../common/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../../../../../core/guards/jwt-auth.guard.js';

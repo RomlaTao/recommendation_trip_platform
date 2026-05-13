@@ -49,6 +49,8 @@ export class NotificationPreferenceSeeder {
       }
     }
 
-    this.logger.log(`Notification preferences seeding done. Created=${created}, Skipped=${skipped}\n`);
+    this.logger.log(
+      `Notification preferences seeding done. Created=${created}, Skipped=${skipped}\n`,
+    );
   }
 }

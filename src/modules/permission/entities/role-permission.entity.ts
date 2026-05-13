@@ -1,11 +1,4 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseEntity } from '../../../core/database/base.entity';
 import { Permission } from './permission.entity';
@@ -24,7 +17,9 @@ export class RolePermission extends BaseEntity {
   @Column({ type: 'uuid' })
   permissionId: string;
 
-  @ManyToOne(() => Role, (role) => role.rolePermissions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Role, (role) => role.rolePermissions, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'roleId' })
   role: Role;
 

@@ -16,7 +16,10 @@ import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.event
 @Module({
   imports: [
     PlaceManagementModule,
-    TypeOrmModule.forFeature([PlaceOrmEntity, PlaceRatingSnapshotEventOrmEntity]),
+    TypeOrmModule.forFeature([
+      PlaceOrmEntity,
+      PlaceRatingSnapshotEventOrmEntity,
+    ]),
     BullModule.registerQueue({
       name: PLACE_RATING_SNAPSHOT_QUEUE,
       defaultJobOptions: {
@@ -36,6 +39,10 @@ import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.event
       useClass: PlaceCatalogRepository,
     },
   ],
-  exports: [PLACE_CATALOG_REPOSITORY, PlaceCatalogService, PlaceRatingSnapshotService],
+  exports: [
+    PLACE_CATALOG_REPOSITORY,
+    PlaceCatalogService,
+    PlaceRatingSnapshotService,
+  ],
 })
 export class PlaceCatalogModule {}

@@ -27,7 +27,9 @@ export class NotificationProcessor {
   ) {}
 
   @Process(NOTIFICATION_JOBS.SEND_EMAIL)
-  async handleSendEmail(job: Job<SendEmailNotificationJobPayload>): Promise<void> {
+  async handleSendEmail(
+    job: Job<SendEmailNotificationJobPayload>,
+  ): Promise<void> {
     const delivery = await this.deliveryRepository.findOne({
       where: { id: job.data.deliveryId },
     });
@@ -57,8 +59,10 @@ export class NotificationProcessor {
             job.data.payload as PlaceRequestSubmittedNotificationPayload,
           );
           break;
-        default:
-          throw new Error(`unsupported_notification_template:${job.data.templateCode}`);
+        default: {
+          const templateCode = job.data.templateCode as string;
+          throw new Error(`unsupported_notification_template:${templateCode}`);
+        }
       }
 
       await this.deliveryRepository.update(
@@ -84,7 +88,10 @@ export class NotificationProcessor {
   }
 
   @OnQueueFailed()
-  async handleFailed(job: Job<SendEmailNotificationJobPayload>, error: Error): Promise<void> {
+  async handleFailed(
+    job: Job<SendEmailNotificationJobPayload>,
+    error: Error,
+  ): Promise<void> {
     const maxAttempts = job.opts.attempts ?? 1;
     if (job.attemptsMade < maxAttempts) {
       return;

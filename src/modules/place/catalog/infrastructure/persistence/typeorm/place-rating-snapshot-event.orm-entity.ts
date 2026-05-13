@@ -1,7 +1,11 @@
 import { Column, Entity, Index } from 'typeorm';
 import { BaseEntity } from '../../../../../../core/database/base.entity.js';
 
-export type SnapshotEventStatus = 'PROCESSING' | 'PROCESSED' | 'FAILED' | 'DEAD_LETTER';
+export type SnapshotEventStatus =
+  | 'PROCESSING'
+  | 'PROCESSED'
+  | 'FAILED'
+  | 'DEAD_LETTER';
 
 @Entity('place_rating_snapshot_events')
 export class PlaceRatingSnapshotEventOrmEntity extends BaseEntity {

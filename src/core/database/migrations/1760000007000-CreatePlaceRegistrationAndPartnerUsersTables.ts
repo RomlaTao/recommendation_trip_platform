@@ -71,9 +71,17 @@ export class CreatePlaceRegistrationAndPartnerOwnerLink1760000007000 implements 
     await queryRunner.query(
       `DROP INDEX IF EXISTS "public"."IDX_place_registration_requests_requester_user_id";`,
     );
-    await queryRunner.query(`DROP TABLE IF EXISTS "place_registration_requests";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."UQ_partners_owner_user_id";`);
-    await queryRunner.query(`ALTER TABLE "partners" DROP CONSTRAINT IF EXISTS "FK_partners_owner_user";`);
-    await queryRunner.query(`ALTER TABLE "partners" DROP COLUMN IF EXISTS "ownerUserId";`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "place_registration_requests";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."UQ_partners_owner_user_id";`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "partners" DROP CONSTRAINT IF EXISTS "FK_partners_owner_user";`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "partners" DROP COLUMN IF EXISTS "ownerUserId";`,
+    );
   }
 }

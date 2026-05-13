@@ -32,11 +32,14 @@ async function runSeeders(): Promise<void> {
 
     logger.log('All seeders completed successfully.');
   } catch (error) {
-    logger.error('Seeding failed', error instanceof Error ? error.stack : error);
+    logger.error(
+      'Seeding failed',
+      error instanceof Error ? error.stack : error,
+    );
     process.exit(1);
   } finally {
     await app.close();
   }
 }
 
-runSeeders();
+void runSeeders();

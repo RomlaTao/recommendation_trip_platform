@@ -4,7 +4,9 @@ import { BaseEntity } from '../../../../../../core/database/base.entity.js';
 
 @Entity('place_reviews')
 @Index('IDX_place_reviews_place_id', ['placeId'])
-@Index('IDX_place_reviews_user_place_unique', ['userId', 'placeId'], { unique: true })
+@Index('IDX_place_reviews_user_place_unique', ['userId', 'placeId'], {
+  unique: true,
+})
 export class PlaceReviewOrmEntity extends BaseEntity {
   @ApiProperty()
   @Column({ type: 'uuid' })

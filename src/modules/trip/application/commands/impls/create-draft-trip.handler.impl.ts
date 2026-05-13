@@ -21,7 +21,9 @@ export class CreateDraftTripHandlerImpl implements CreateDraftTripHandler {
     private readonly eventBus: TripEventBusPort,
   ) {}
 
-  async execute(command: CreateDraftTripCommand): Promise<CreateDraftTripResult> {
+  async execute(
+    command: CreateDraftTripCommand,
+  ): Promise<CreateDraftTripResult> {
     const trip = TripAggregate.create({
       userId: command.userId,
       title: command.title,
@@ -51,7 +53,9 @@ export class CreateDraftTripHandlerImpl implements CreateDraftTripHandler {
     }
 
     await this.tripRepository.save(trip);
-    await this.eventBus.publish([new TripDraftCreatedEvent(trip.id, command.userId, trip.status)]);
+    await this.eventBus.publish([
+      new TripDraftCreatedEvent(trip.id, command.userId, trip.status),
+    ]);
 
     return { id: trip.id };
   }

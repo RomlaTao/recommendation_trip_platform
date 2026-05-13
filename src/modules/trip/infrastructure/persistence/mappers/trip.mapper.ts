@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { TripAggregate, TripAggregateSnapshot } from '../../../domain/aggregates/trip.aggregate.js';
+import {
+  TripAggregate,
+  TripAggregateSnapshot,
+} from '../../../domain/aggregates/trip.aggregate.js';
 import { TripDayEntity } from '../../../domain/entities/trip-day.entity.js';
 import { TripItemEntity } from '../../../domain/entities/trip-item.entity.js';
 import { TimeSlotVO } from '../../../domain/value-objects/time-slot.vo.js';
@@ -38,7 +41,9 @@ export class TripMapper {
     orm.startDate = this.toDateOnlyString(snapshot.dateRange.startDate);
     orm.endDate = this.toDateOnlyString(snapshot.dateRange.endDate);
     orm.version = snapshot.version;
-    orm.days = snapshot.days.map((day) => this.toPersistenceDay(day, snapshot.id));
+    orm.days = snapshot.days.map((day) =>
+      this.toPersistenceDay(day, snapshot.id),
+    );
 
     return orm;
   }
@@ -63,11 +68,17 @@ export class TripMapper {
       type: itemOrm.type,
       note: itemOrm.note ?? null,
       sortOrder: itemOrm.sortOrder,
-      timeSlot: new TimeSlotVO(itemOrm.startTime.slice(0, 5), itemOrm.endTime.slice(0, 5)),
+      timeSlot: new TimeSlotVO(
+        itemOrm.startTime.slice(0, 5),
+        itemOrm.endTime.slice(0, 5),
+      ),
     });
   }
 
-  private toPersistenceDay(day: TripDayEntity, tripId: string): TripDayOrmEntity {
+  private toPersistenceDay(
+    day: TripDayEntity,
+    tripId: string,
+  ): TripDayOrmEntity {
     const snapshot = day.toSnapshot();
     const orm = new TripDayOrmEntity();
 
@@ -75,12 +86,17 @@ export class TripMapper {
     orm.tripId = tripId;
     orm.dayIndex = snapshot.dayIndex;
     orm.date = snapshot.date;
-    orm.items = snapshot.items.map((item) => this.toPersistenceItem(item, snapshot.id));
+    orm.items = snapshot.items.map((item) =>
+      this.toPersistenceItem(item, snapshot.id),
+    );
 
     return orm;
   }
 
-  private toPersistenceItem(item: TripItemEntity, tripDayId: string): TripItemOrmEntity {
+  private toPersistenceItem(
+    item: TripItemEntity,
+    tripDayId: string,
+  ): TripItemOrmEntity {
     const snapshot = item.toSnapshot();
     const orm = new TripItemOrmEntity();
 

@@ -97,9 +97,13 @@ export class TripAggregate {
     this.ensureNotTerminalState();
     this.ensureDateInsideRange(input.date);
 
-    const existing = this.snapshot.days.find((day) => day.dayIndex === input.dayIndex);
+    const existing = this.snapshot.days.find(
+      (day) => day.dayIndex === input.dayIndex,
+    );
     if (existing) {
-      throw new TripInvalidStateTransitionError('trip_day_index_already_exists');
+      throw new TripInvalidStateTransitionError(
+        'trip_day_index_already_exists',
+      );
     }
 
     this.snapshot.days.push(
@@ -122,11 +126,15 @@ export class TripAggregate {
 
     if (input.dayIndex !== undefined && input.dayIndex !== day.dayIndex) {
       const duplicateDayIndex = this.snapshot.days.some(
-        (existingDay) => existingDay.id !== input.dayId && existingDay.dayIndex === input.dayIndex,
+        (existingDay) =>
+          existingDay.id !== input.dayId &&
+          existingDay.dayIndex === input.dayIndex,
       );
 
       if (duplicateDayIndex) {
-        throw new TripInvalidStateTransitionError('trip_day_index_already_exists');
+        throw new TripInvalidStateTransitionError(
+          'trip_day_index_already_exists',
+        );
       }
 
       day.changeDayIndex(input.dayIndex);
@@ -145,10 +153,14 @@ export class TripAggregate {
 
     const day = this.findDayOrThrow(input.dayId);
     if (day.hasAnyItem()) {
-      throw new TripInvalidStateTransitionError('trip_day_remove_requires_empty_day');
+      throw new TripInvalidStateTransitionError(
+        'trip_day_remove_requires_empty_day',
+      );
     }
 
-    this.snapshot.days = this.snapshot.days.filter((existingDay) => existingDay.id !== input.dayId);
+    this.snapshot.days = this.snapshot.days.filter(
+      (existingDay) => existingDay.id !== input.dayId,
+    );
     this.bumpVersion();
   }
 
@@ -160,7 +172,9 @@ export class TripAggregate {
 
     const newSlot = new TimeSlotVO(input.startTime, input.endTime);
 
-    if (day.items.some((existingItem) => existingItem.timeSlot.overlaps(newSlot))) {
+    if (
+      day.items.some((existingItem) => existingItem.timeSlot.overlaps(newSlot))
+    ) {
       throw new TripItemTimeOverlapError();
     }
 
@@ -179,7 +193,12 @@ export class TripAggregate {
     this.bumpVersion();
   }
 
-  rescheduleItem(input: { tripDayId: string; itemId: string; startTime: string; endTime: string }): void {
+  rescheduleItem(input: {
+    tripDayId: string;
+    itemId: string;
+    startTime: string;
+    endTime: string;
+  }): void {
     this.ensureNotTerminalState();
 
     const day = this.findDayOrThrow(input.tripDayId);
@@ -189,8 +208,7 @@ export class TripAggregate {
     }
 
     const candidateSlot = new TimeSlotVO(input.startTime, input.endTime);
-    const hasOverlap = day
-      .items
+    const hasOverlap = day.items
       .filter((existingItem) => existingItem.id !== input.itemId)
       .some((existingItem) => existingItem.timeSlot.overlaps(candidateSlot));
 
@@ -244,10 +262,14 @@ export class TripAggregate {
 
   confirm(): void {
     if (this.snapshot.status !== TripStatus.DRAFT) {
-      throw new TripInvalidStateTransitionError('trip_confirm_requires_draft_status');
+      throw new TripInvalidStateTransitionError(
+        'trip_confirm_requires_draft_status',
+      );
     }
 
-    const hasAtLeastOneItem = this.snapshot.days.some((day) => day.hasAnyItem());
+    const hasAtLeastOneItem = this.snapshot.days.some((day) =>
+      day.hasAnyItem(),
+    );
     if (!hasAtLeastOneItem) {
       throw new TripConfirmEmptyError();
     }
@@ -257,8 +279,13 @@ export class TripAggregate {
   }
 
   cancel(): void {
-    if (this.snapshot.status !== TripStatus.DRAFT && this.snapshot.status !== TripStatus.UPCOMING) {
-      throw new TripInvalidStateTransitionError('trip_cancel_requires_draft_or_upcoming_status');
+    if (
+      this.snapshot.status !== TripStatus.DRAFT &&
+      this.snapshot.status !== TripStatus.UPCOMING
+    ) {
+      throw new TripInvalidStateTransitionError(
+        'trip_cancel_requires_draft_or_upcoming_status',
+      );
     }
 
     this.snapshot.status = TripStatus.CANCELLED;
@@ -267,7 +294,9 @@ export class TripAggregate {
 
   start(): void {
     if (this.snapshot.status !== TripStatus.UPCOMING) {
-      throw new TripInvalidStateTransitionError('trip_start_requires_upcoming_status');
+      throw new TripInvalidStateTransitionError(
+        'trip_start_requires_upcoming_status',
+      );
     }
 
     this.snapshot.status = TripStatus.ONGOING;
@@ -276,7 +305,9 @@ export class TripAggregate {
 
   complete(): void {
     if (this.snapshot.status !== TripStatus.ONGOING) {
-      throw new TripInvalidStateTransitionError('trip_complete_requires_ongoing_status');
+      throw new TripInvalidStateTransitionError(
+        'trip_complete_requires_ongoing_status',
+      );
     }
 
     this.snapshot.status = TripStatus.COMPLETED;

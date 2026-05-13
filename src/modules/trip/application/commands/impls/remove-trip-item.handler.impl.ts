@@ -2,7 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
 import { TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
-import { RemoveTripItemCommand, RemoveTripItemHandler } from '../handles/remove-trip-item.handler.js';
+import {
+  RemoveTripItemCommand,
+  RemoveTripItemHandler,
+} from '../handles/remove-trip-item.handler.js';
 
 @Injectable()
 export class RemoveTripItemHandlerImpl implements RemoveTripItemHandler {

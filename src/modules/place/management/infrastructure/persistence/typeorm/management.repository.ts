@@ -15,7 +15,10 @@ export class PlaceManagementRepository implements PlaceManagementRepositoryPort 
   ) {}
 
   async findById(id: string): Promise<PlaceManagementAggregate | null> {
-    const found = await this.repository.findOne({ where: { id }, withDeleted: true });
+    const found = await this.repository.findOne({
+      where: { id },
+      withDeleted: true,
+    });
     return found ? this.mapper.toDomain(found) : null;
   }
 

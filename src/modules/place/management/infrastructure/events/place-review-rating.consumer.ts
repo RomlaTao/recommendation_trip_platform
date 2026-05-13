@@ -19,7 +19,8 @@ export class PlaceReviewRatingConsumer {
   @Process(APPLY_REVIEW_EVENT_JOB)
   async handleApplyReviewEvent(job: any): Promise<void> {
     const typedJob = job as { data: PlaceReviewDomainEvent };
-    const ratingUpdatedEvent = await this.placeRatingUpdateService.applyReviewEvent(typedJob.data);
+    const ratingUpdatedEvent =
+      await this.placeRatingUpdateService.applyReviewEvent(typedJob.data);
     await this.placeRatingUpdatedPublisher.publish(ratingUpdatedEvent);
   }
 }

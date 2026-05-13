@@ -5,8 +5,16 @@ import { PlaceCategoryOrmEntity } from '../../../../modules/place/management/inf
 import { readPlaceCategoryCsvRows } from '../utils/place-category-csv.util.js';
 import { readPlaceCsvRows } from '../utils/place-csv.util.js';
 
+function categoryCsvPathForLogs(): string {
+  return process.env.CATEGORY_FOR_PLACES_CSV_PATH ?? '(unset)';
+}
+
 function toCategorySlug(categoryName: string): string {
-  return categoryName.trim().toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return categoryName
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
 }
 
 @Injectable()
@@ -19,7 +27,9 @@ export class PlaceCategorySeeder {
   ) {}
 
   async run(): Promise<void> {
-    this.logger.log('Seeding place categories from categories_for_places.csv...');
+    this.logger.log(
+      `Seeding place categories from ${categoryCsvPathForLogs()}...`,
+    );
     const categoryRows = readPlaceCategoryCsvRows();
     const placeRows = readPlaceCsvRows();
 
@@ -35,7 +45,7 @@ export class PlaceCategorySeeder {
     );
     if (missingCategoryIds.length > 0) {
       throw new Error(
-        `categories_for_places.csv is missing category ids used by places CSV: ${missingCategoryIds.join(', ')}`,
+        `${categoryCsvPathForLogs()} is missing category ids used by places CSV: ${missingCategoryIds.join(', ')}`,
       );
     }
 

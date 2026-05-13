@@ -24,12 +24,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../../core/guards/jwt-auth.guard';
-// `import type` required: isolatedModules + emitDecoratorMetadata cannot emit
-// runtime metadata for interfaces used in decorated method signatures.
-import type { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';
-import { UpdateUserDto } from '../dto/update-user.dto';
 import { AdminUpdateUserDto } from '../dto/admin-update-user.dto';
 import { User } from '../entities/user.entity';
 import { UsersService } from '../users.service';
@@ -72,7 +67,9 @@ export class UsersController {
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiOkResponse({ description: 'Get user successfully', type: User })
   @ApiNotFoundResponse({ description: 'User not found' })
-  async getUserById(@Param('id', new ParseUUIDPipe()) id: string): Promise<User> {
+  async getUserById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<User> {
     return this.usersService.getUserById(id);
   }
 
@@ -111,7 +108,9 @@ export class UsersController {
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiNoContentResponse({ description: 'Restore user successfully' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  async restoreUserById(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
+  async restoreUserById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<void> {
     return this.usersService.restoreUser(id);
   }
 
@@ -134,7 +133,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Replace all roles for user (multi-role)' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiBody({ type: AssignUserRolesDto })
-  @ApiOkResponse({ description: 'User roles replaced', type: UserRoleSummaryDto })
+  @ApiOkResponse({
+    description: 'User roles replaced',
+    type: UserRoleSummaryDto,
+  })
   @ApiNotFoundResponse({ description: 'User or role not found' })
   async replaceUserRoles(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -154,7 +156,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Assign additional roles to user' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiBody({ type: AssignUserRolesDto })
-  @ApiOkResponse({ description: 'User roles updated', type: UserRoleSummaryDto })
+  @ApiOkResponse({
+    description: 'User roles updated',
+    type: UserRoleSummaryDto,
+  })
   @ApiNotFoundResponse({ description: 'User or role not found' })
   async assignUserRoles(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -174,7 +179,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Set primary role for user' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiBody({ type: SetPrimaryUserRoleDto })
-  @ApiOkResponse({ description: 'Primary role updated', type: UserRoleSummaryDto })
+  @ApiOkResponse({
+    description: 'Primary role updated',
+    type: UserRoleSummaryDto,
+  })
   @ApiNotFoundResponse({ description: 'User or role not found' })
   async setPrimaryRole(
     @Param('id', new ParseUUIDPipe()) id: string,

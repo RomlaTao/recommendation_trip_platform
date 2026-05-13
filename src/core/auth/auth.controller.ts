@@ -24,7 +24,6 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard.js';
 import {
   AuthService,
-  LoginResult,
   LogoutResult,
   RefreshTokensResult,
   RegisterResult,
@@ -47,9 +46,7 @@ export class AuthController {
   @ApiCreatedResponse({ description: 'Register successfully' })
   @ApiConflictResponse({ description: 'Email already exists' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
-  async register(
-    @Body() dto: RegisterDto,
-  ): Promise<RegisterResult> {
+  async register(@Body() dto: RegisterDto): Promise<RegisterResult> {
     return await this.authService.register(dto);
   }
 
@@ -59,9 +56,7 @@ export class AuthController {
   @ApiQuery({ name: 'token', type: String, required: true })
   @ApiOkResponse({ description: 'Email verified successfully' })
   @ApiBadRequestResponse({ description: 'Invalid or expired verify token' })
-  async verifyEmail(
-    @Query('token') token: string,
-  ): Promise<VerifyEmailResult> {
+  async verifyEmail(@Query('token') token: string): Promise<VerifyEmailResult> {
     return await this.authService.verifyEmailToken(token);
   }
 
@@ -84,9 +79,7 @@ export class AuthController {
   @ApiBody({ type: RefreshTokenDto })
   @ApiOkResponse({ description: 'Token refreshed successfully' })
   @ApiUnauthorizedResponse({ description: 'Refresh token invalid or expired' })
-  async refresh(
-    @Body() dto: RefreshTokenDto,
-  ): Promise<RefreshTokensResult> {
+  async refresh(@Body() dto: RefreshTokenDto): Promise<RefreshTokensResult> {
     return await this.authService.refreshTokens(dto.refreshToken);
   }
 

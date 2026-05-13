@@ -13,11 +13,30 @@ export interface PlaceRatingSnapshot {
   ratingLastUpdatedAt: Date;
 }
 
+interface PlaceIdRow {
+  id: string;
+}
+
+interface RatingAggregateRow {
+  averageRating: string | null;
+  reviewCount: string | number | null;
+}
+
+function asPlaceIdRows(rows: unknown): PlaceIdRow[] {
+  return rows as PlaceIdRow[];
+}
+
+function asRatingAggregateRows(rows: unknown): RatingAggregateRow[] {
+  return rows as RatingAggregateRow[];
+}
+
 @Injectable()
 export class PlaceRatingUpdateService {
   constructor(private readonly dataSource: DataSource) {}
 
-  async applyReviewEvent(event: PlaceReviewDomainEvent): Promise<PlaceRatingUpdatedDomainEvent> {
+  async applyReviewEvent(
+    event: PlaceReviewDomainEvent,
+  ): Promise<PlaceRatingUpdatedDomainEvent> {
     const snapshot = await this.recalculateAndPersist(event.payload.placeId);
     return createPlaceRatingUpdatedEvent({
       ...snapshot,
@@ -26,7 +45,7 @@ export class PlaceRatingUpdateService {
   }
 
   async reconcile(limit = 100): Promise<PlaceRatingSnapshot[]> {
-    const candidates = await this.dataSource.query(
+    const rawCandidates: unknown = await this.dataSource.query(
       `
       SELECT p."id"
       FROM "places" p
@@ -43,9 +62,10 @@ export class PlaceRatingUpdateService {
       `,
       [limit],
     );
+    const candidates = asPlaceIdRows(rawCandidates);
 
     const snapshots: PlaceRatingSnapshot[] = [];
-    for (const row of candidates as Array<{ id: string }>) {
+    for (const row of candidates) {
       const snapshot = await this.recalculateAndPersist(row.id);
       snapshots.push(snapshot);
     }
@@ -53,8 +73,10 @@ export class PlaceRatingUpdateService {
     return snapshots;
   }
 
-  private async recalculateAndPersist(placeId: string): Promise<PlaceRatingSnapshot> {
-    const [result] = (await this.dataSource.query(
+  private async recalculateAndPersist(
+    placeId: string,
+  ): Promise<PlaceRatingSnapshot> {
+    const rawRows: unknown = await this.dataSource.query(
       `
       SELECT
         AVG(r."rating")::numeric(3,2) AS "averageRating",
@@ -64,7 +86,9 @@ export class PlaceRatingUpdateService {
         AND r."deletedAt" IS NULL
       `,
       [placeId],
-    )) as Array<{ averageRating: string | null; reviewCount: number }>;
+    );
+    const rows = asRatingAggregateRows(rawRows);
+    const result = rows[0];
 
     const snapshot: PlaceRatingSnapshot = {
       placeId,
@@ -82,7 +106,12 @@ export class PlaceRatingUpdateService {
         "ratingLastUpdatedAt" = $4
       WHERE "id" = $1
       `,
-      [snapshot.placeId, snapshot.averageRating, snapshot.reviewCount, snapshot.ratingLastUpdatedAt],
+      [
+        snapshot.placeId,
+        snapshot.averageRating,
+        snapshot.reviewCount,
+        snapshot.ratingLastUpdatedAt,
+      ],
     );
 
     return snapshot;

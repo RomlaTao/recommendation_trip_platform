@@ -18,7 +18,10 @@ export class Permission extends BaseEntity {
   @ApiProperty({ example: 'read' })
   @Column({ type: 'varchar', length: 80 })
   action: string;
-  
-  @OneToMany(() => RolePermission, (rolePermission) => rolePermission.permission)
+
+  @OneToMany(
+    () => RolePermission,
+    (rolePermission) => rolePermission.permission,
+  )
   rolePermissions: RolePermission[];
 }

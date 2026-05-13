@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Repository } from 'typeorm';
 import { ERROR_MESSAGES } from '../../../common/constants/error-messages.constant.js';
@@ -39,7 +43,9 @@ export class UserRoleService {
     };
   }
 
-  async getPrimaryRoleCodeByUserId(userId: string): Promise<string | undefined> {
+  async getPrimaryRoleCodeByUserId(
+    userId: string,
+  ): Promise<string | undefined> {
     const primary = await this.userRoleRepository.findOne({
       where: { userId, isPrimary: true, deletedAt: IsNull() },
       relations: { role: true },
@@ -71,8 +77,11 @@ export class UserRoleService {
     }
 
     const existingMappings = await this.getMappingsWithRoles(userId);
-    const existingByRoleId = new Map(existingMappings.map((mapping) => [mapping.roleId, mapping]));
-    const mappingsWithDeleted = await this.getMappingsWithRolesIncludingDeleted(userId);
+    const existingByRoleId = new Map(
+      existingMappings.map((mapping) => [mapping.roleId, mapping]),
+    );
+    const mappingsWithDeleted =
+      await this.getMappingsWithRolesIncludingDeleted(userId);
     const deletedByRoleId = new Map(
       mappingsWithDeleted
         .filter((mapping) => mapping.deletedAt !== null)
@@ -86,7 +95,10 @@ export class UserRoleService {
       const deletedMapping = deletedByRoleId.get(role.id);
       if (deletedMapping) {
         await this.userRoleRepository.restore(deletedMapping.id);
-        await this.userRoleRepository.update({ id: deletedMapping.id }, { isPrimary: false });
+        await this.userRoleRepository.update(
+          { id: deletedMapping.id },
+          { isPrimary: false },
+        );
         continue;
       }
 
@@ -157,7 +169,9 @@ export class UserRoleService {
     });
   }
 
-  private async getMappingsWithRolesIncludingDeleted(userId: string): Promise<UserRole[]> {
+  private async getMappingsWithRolesIncludingDeleted(
+    userId: string,
+  ): Promise<UserRole[]> {
     return this.userRoleRepository.find({
       where: { userId },
       withDeleted: true,
@@ -179,7 +193,13 @@ export class UserRoleService {
       throw new NotFoundException(ERROR_MESSAGES.RESOURCE_NOT_FOUND);
     }
 
-    await this.userRoleRepository.update({ userId, deletedAt: IsNull() }, { isPrimary: false });
-    await this.userRoleRepository.update({ id: target.id }, { isPrimary: true });
+    await this.userRoleRepository.update(
+      { userId, deletedAt: IsNull() },
+      { isPrimary: false },
+    );
+    await this.userRoleRepository.update(
+      { id: target.id },
+      { isPrimary: true },
+    );
   }
 }

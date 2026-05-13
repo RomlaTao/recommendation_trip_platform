@@ -28,7 +28,10 @@ import type { JwtPayload } from '../../../../../common/interfaces/jwt-payload.in
 import { JwtAuthGuard } from '../../../../../core/guards/jwt-auth.guard.js';
 import { PlaceReviewService } from '../../application/place-review.service.js';
 import { CreateReviewDto } from '../dtos/create-review.dto.js';
-import { PaginatedPlaceReviewsDto, PlaceReviewDto } from '../dtos/review-response.dto.js';
+import {
+  PaginatedPlaceReviewsDto,
+  PlaceReviewDto,
+} from '../dtos/review-response.dto.js';
 import { UpdateReviewDto } from '../dtos/update-review.dto.js';
 
 @ApiTags('Place Reviews')
@@ -45,7 +48,11 @@ export class PlaceReviewController {
     @Param('placeId', new ParseUUIDPipe()) placeId: string,
     @Query() query: PaginationDto,
   ) {
-    return this.placeReviewService.getPlaceReviews(placeId, query.page, query.limit);
+    return this.placeReviewService.getPlaceReviews(
+      placeId,
+      query.page,
+      query.limit,
+    );
   }
 
   @Post('places/:placeId/reviews')
@@ -53,7 +60,10 @@ export class PlaceReviewController {
   @ApiBearerAuth()
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Create or update current user review for place (idempotent upsert)' })
+  @ApiOperation({
+    summary:
+      'Create or update current user review for place (idempotent upsert)',
+  })
   @ApiParam({ name: 'placeId', type: String, format: 'uuid' })
   @ApiBody({ type: CreateReviewDto })
   @ApiOkResponse({ type: PlaceReviewDto })

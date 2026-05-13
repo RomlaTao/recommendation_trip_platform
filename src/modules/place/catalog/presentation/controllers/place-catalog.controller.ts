@@ -36,7 +36,12 @@ export class PlaceCatalogController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Search approved places' })
   @ApiQuery({ name: 'q', required: false, type: String })
-  @ApiQuery({ name: 'categoryId', required: false, type: String, format: 'uuid' })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: String,
+    format: 'uuid',
+  })
   @ApiQuery({ name: 'minRating', required: false, type: Number })
   @ApiQuery({
     name: 'sort',
@@ -55,7 +60,9 @@ export class PlaceCatalogController {
   @UseGuards(NearbyRateLimitGuard)
   @ApiOperation({ summary: 'Find approved places near a coordinate' })
   @ApiOkResponse({ type: [NearbyPlaceDto] })
-  @ApiTooManyRequestsResponse({ description: 'Too many nearby requests in a short window' })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many nearby requests in a short window',
+  })
   findNearby(@Query() query: NearbyPlacesQueryDto) {
     return this.placeCatalogService.getNearbyPlaces(query);
   }

@@ -13,10 +13,14 @@ export class PlaceRatingSnapshotService {
     private readonly snapshotEventRepository: Repository<PlaceRatingSnapshotEventOrmEntity>,
   ) {}
 
-  async applyPlaceRatingUpdatedEvent(event: PlaceRatingUpdatedDomainEvent): Promise<void> {
+  async applyPlaceRatingUpdatedEvent(
+    event: PlaceRatingUpdatedDomainEvent,
+  ): Promise<void> {
     const inserted = await this.tryStartInboxEvent(event);
     if (!inserted) {
-      this.logger.debug(`Skip duplicated place rating updated event ${event.metadata.eventId}`);
+      this.logger.debug(
+        `Skip duplicated place rating updated event ${event.metadata.eventId}`,
+      );
       return;
     }
 
@@ -40,7 +44,10 @@ export class PlaceRatingSnapshotService {
     }
   }
 
-  async markEventDeadLetter(event: PlaceRatingUpdatedDomainEvent, error: unknown): Promise<void> {
+  async markEventDeadLetter(
+    event: PlaceRatingUpdatedDomainEvent,
+    error: unknown,
+  ): Promise<void> {
     await this.snapshotEventRepository.update(
       { eventId: event.metadata.eventId },
       {
@@ -51,7 +58,9 @@ export class PlaceRatingSnapshotService {
     );
   }
 
-  private async tryStartInboxEvent(event: PlaceRatingUpdatedDomainEvent): Promise<boolean> {
+  private async tryStartInboxEvent(
+    event: PlaceRatingUpdatedDomainEvent,
+  ): Promise<boolean> {
     const result = await this.snapshotEventRepository
       .createQueryBuilder()
       .insert()
@@ -67,10 +76,14 @@ export class PlaceRatingSnapshotService {
       .orIgnore()
       .execute();
 
-    return (result.raw?.rowCount ?? 0) > 0;
+    const raw = result.raw as { rowCount?: number } | undefined;
+    return (raw?.rowCount ?? 0) > 0;
   }
 
-  private async markEventFailed(event: PlaceRatingUpdatedDomainEvent, error: unknown): Promise<void> {
+  private async markEventFailed(
+    event: PlaceRatingUpdatedDomainEvent,
+    error: unknown,
+  ): Promise<void> {
     await this.snapshotEventRepository
       .createQueryBuilder()
       .update()

@@ -17,9 +17,10 @@ type ApiEnvelope<T> = {
  * Bọc output từ controller thành một envelope chuẩn để trả về
  */
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ApiEnvelope<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ApiEnvelope<T>
+> {
   intercept(
     _context: ExecutionContext,
     next: CallHandler<T>,

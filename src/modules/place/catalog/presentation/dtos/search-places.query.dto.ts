@@ -1,5 +1,14 @@
 import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import type { PlaceCatalogSort } from '../../application/ports/place-catalog-repository.port.js';
 

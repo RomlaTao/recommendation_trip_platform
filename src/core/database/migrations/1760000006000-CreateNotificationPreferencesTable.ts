@@ -29,8 +29,12 @@ export class CreateNotificationPreferencesTable1760000006000 implements Migratio
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_notification_preferences_user_type_unique";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_notification_preferences_user_id";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_notification_preferences_user_type_unique";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_notification_preferences_user_id";`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "notification_preferences";`);
   }
 }

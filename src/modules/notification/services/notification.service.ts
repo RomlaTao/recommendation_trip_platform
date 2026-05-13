@@ -38,13 +38,17 @@ export class NotificationService {
     private readonly usersService: UsersService,
   ) {}
 
-  async notifyVerifyEmail(payload: VerifyEmailNotificationPayload): Promise<void> {
+  async notifyVerifyEmail(
+    payload: VerifyEmailNotificationPayload,
+  ): Promise<void> {
     const sourceEventId = this.buildSourceEventId(
       'auth_verify_email',
       payload.to.trim().toLowerCase(),
       payload.verifyToken,
     );
-    const existing = await this.deliveryRepository.findOne({ where: { sourceEventId } });
+    const existing = await this.deliveryRepository.findOne({
+      where: { sourceEventId },
+    });
     if (existing) {
       return;
     }
@@ -68,7 +72,10 @@ export class NotificationService {
     });
   }
 
-  async notifyPlaceApproved(input: { actorUserId: string; placeId: string }): Promise<void> {
+  async notifyPlaceApproved(input: {
+    actorUserId: string;
+    placeId: string;
+  }): Promise<void> {
     const user = await this.usersService.findById(input.actorUserId);
     if (!user?.email) {
       return;
@@ -88,7 +95,11 @@ export class NotificationService {
     );
 
     if (preference.emailEnabled) {
-      await this.createDeliveryAndEnqueue(sourceEventId, NOTIFICATION_TEMPLATES.PLACE_APPROVED, payload);
+      await this.createDeliveryAndEnqueue(
+        sourceEventId,
+        NOTIFICATION_TEMPLATES.PLACE_APPROVED,
+        payload,
+      );
     }
     if (preference.inAppEnabled) {
       await this.createInAppNotification({
@@ -127,7 +138,11 @@ export class NotificationService {
     );
 
     if (preference.emailEnabled) {
-      await this.createDeliveryAndEnqueue(sourceEventId, NOTIFICATION_TEMPLATES.PLACE_REJECTED, payload);
+      await this.createDeliveryAndEnqueue(
+        sourceEventId,
+        NOTIFICATION_TEMPLATES.PLACE_REJECTED,
+        payload,
+      );
     }
     if (preference.inAppEnabled) {
       await this.createInAppNotification({
@@ -205,9 +220,16 @@ export class NotificationService {
     };
   }
 
-  async markAsRead(userId: string, notificationId: string): Promise<{ success: true }> {
+  async markAsRead(
+    userId: string,
+    notificationId: string,
+  ): Promise<{ success: true }> {
     const notification = await this.notificationRepository.findOne({
-      where: { id: notificationId, recipientUserId: userId, deletedAt: IsNull() },
+      where: {
+        id: notificationId,
+        recipientUserId: userId,
+        deletedAt: IsNull(),
+      },
     });
     if (!notification) {
       return { success: true };
@@ -281,7 +303,9 @@ export class NotificationService {
       | PlaceRejectedNotificationPayload
       | PlaceRequestSubmittedNotificationPayload,
   ): Promise<void> {
-    const existing = await this.deliveryRepository.findOne({ where: { sourceEventId } });
+    const existing = await this.deliveryRepository.findOne({
+      where: { sourceEventId },
+    });
     if (existing) {
       return;
     }

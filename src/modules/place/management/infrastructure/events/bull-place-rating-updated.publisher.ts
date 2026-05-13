@@ -1,5 +1,6 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
+import type { Queue } from 'bull';
 import {
   APPLY_PLACE_RATING_UPDATED_JOB,
   PLACE_RATING_SNAPSHOT_QUEUE,
@@ -10,7 +11,7 @@ import {
 export class BullPlaceRatingUpdatedPublisher {
   constructor(
     @InjectQueue(PLACE_RATING_SNAPSHOT_QUEUE)
-    private readonly queue: any,
+    private readonly queue: Queue,
   ) {}
 
   async publish(event: PlaceRatingUpdatedDomainEvent): Promise<void> {

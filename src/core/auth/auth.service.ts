@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'crypto';
 import { IsNull, MoreThan, Repository } from 'typeorm';
@@ -59,9 +59,7 @@ export class AuthService {
 
   // ── Public flows ───────────────────────────────────────────────────────────
 
-  async register(
-    dto: RegisterDto,
-  ): Promise<RegisterResult> {
+  async register(dto: RegisterDto): Promise<RegisterResult> {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
       throw new ConflictException(ERROR_MESSAGES.CONFLICT);
@@ -82,7 +80,9 @@ export class AuthService {
       'DEFAULT_USER_ROLE_CODE',
       'USER',
     );
-    await this.userRoleService.assignRolesByCodes(createdUser.id, [defaultRoleCode]);
+    await this.userRoleService.assignRolesByCodes(createdUser.id, [
+      defaultRoleCode,
+    ]);
     await this._issueVerifyEmailToken(createdUser.id, dto.email, dto.username);
 
     return null;
@@ -98,7 +98,10 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
-    const passwordValid = await this._comparePassword(dto.password, user.passwordHash);
+    const passwordValid = await this._comparePassword(
+      dto.password,
+      user.passwordHash,
+    );
     if (!passwordValid) {
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
@@ -112,7 +115,11 @@ export class AuthService {
     }
 
     const roleCodes = await this.userRoleService.getRoleCodesByUserId(user.id);
-    const tokens = await this._generateTokenPair(user.id, user.email, roleCodes);
+    const tokens = await this._generateTokenPair(
+      user.id,
+      user.email,
+      roleCodes,
+    );
     return { user, tokens };
   }
 
@@ -143,7 +150,11 @@ export class AuthService {
     await this.userTokenRepository.save(tokenRecord);
 
     const roleCodes = await this.userRoleService.getRoleCodesByUserId(user.id);
-    const tokens = await this._generateTokenPair(user.id, user.email, roleCodes);
+    const tokens = await this._generateTokenPair(
+      user.id,
+      user.email,
+      roleCodes,
+    );
 
     return { tokens };
   }
@@ -182,7 +193,10 @@ export class AuthService {
     await this.userTokenRepository.save(tokenRecord);
 
     await this.usersService.activateUser(tokenRecord.userId);
-    await this._revokeActiveTokensByType(tokenRecord.userId, USER_TOKEN_TYPES.VERIFY_EMAIL);
+    await this._revokeActiveTokensByType(
+      tokenRecord.userId,
+      USER_TOKEN_TYPES.VERIFY_EMAIL,
+    );
     return null;
   }
 
@@ -208,7 +222,8 @@ export class AuthService {
     );
     const refreshToken = this._generateRandomToken();
     const refreshExpiresAt = new Date(
-      Date.now() + this._parseExpiryToSeconds(this.tokenConfig.refreshExpiresIn) * 1000,
+      Date.now() +
+        this._parseExpiryToSeconds(this.tokenConfig.refreshExpiresIn) * 1000,
     );
 
     await this.userTokenRepository.save(
@@ -221,7 +236,9 @@ export class AuthService {
     );
 
     // Parse expiry string to seconds for the client (e.g. '15m' → 900)
-    const expiresIn = this._parseExpiryToSeconds(this.tokenConfig.accessExpiresIn);
+    const expiresIn = this._parseExpiryToSeconds(
+      this.tokenConfig.accessExpiresIn,
+    );
 
     return { accessToken, refreshToken, expiresIn };
   }
@@ -232,7 +249,9 @@ export class AuthService {
     username?: string,
   ): Promise<void> {
     const verifyToken = this._generateRandomToken();
-    const expiresAt = new Date(Date.now() + this.emailConfig.verifyTokenTtlSeconds * 1000);
+    const expiresAt = new Date(
+      Date.now() + this.emailConfig.verifyTokenTtlSeconds * 1000,
+    );
 
     await this._revokeActiveTokensByType(userId, USER_TOKEN_TYPES.VERIFY_EMAIL);
 
@@ -305,9 +324,7 @@ export class AuthService {
   ): Promise<string> {
     return this.jwtService.signAsync(payload, {
       secret,
-      // `as any` cast: JwtSignOptions.expiresIn expects StringValue (branded ms type),
-      // but our config value is a plain string. Runtime behaviour is identical.
-      expiresIn: expiresIn as any,
+      expiresIn: expiresIn as JwtSignOptions['expiresIn'],
     });
   }
 

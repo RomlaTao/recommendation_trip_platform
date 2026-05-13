@@ -37,7 +37,11 @@ export class TypeormTripRepository implements TripRepositoryPort {
     return this.mapper.toDomain(orm);
   }
 
-  async findByUserId(input: { userId: string; page: number; limit: number }): Promise<TripAggregate[]> {
+  async findByUserId(input: {
+    userId: string;
+    page: number;
+    limit: number;
+  }): Promise<TripAggregate[]> {
     const offset = (input.page - 1) * input.limit;
 
     const ormTrips = await this.repository.find({

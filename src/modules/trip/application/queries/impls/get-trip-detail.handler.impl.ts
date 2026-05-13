@@ -2,7 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
 import { TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
-import { GetTripDetailHandler, GetTripDetailQuery } from '../handles/get-trip-detail.handler.js';
+import {
+  GetTripDetailHandler,
+  GetTripDetailQuery,
+} from '../handles/get-trip-detail.handler.js';
 import type { TripAggregateSnapshot } from '../../../domain/aggregates/trip.aggregate.js';
 
 @Injectable()

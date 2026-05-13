@@ -14,7 +14,9 @@ export class PlaceReviewRepository {
     private readonly placeRepository: Repository<PlaceOrmEntity>,
   ) {}
 
-  async findVisiblePlaceById(placeId: string): Promise<Pick<PlaceOrmEntity, 'id'> | null> {
+  async findVisiblePlaceById(
+    placeId: string,
+  ): Promise<Pick<PlaceOrmEntity, 'id'> | null> {
     return this.placeRepository.findOne({
       where: {
         id: placeId,
@@ -25,14 +27,20 @@ export class PlaceReviewRepository {
     });
   }
 
-  async findById(reviewId: string, withDeleted = false): Promise<PlaceReviewOrmEntity | null> {
+  async findById(
+    reviewId: string,
+    withDeleted = false,
+  ): Promise<PlaceReviewOrmEntity | null> {
     return this.reviewRepository.findOne({
       where: { id: reviewId },
       withDeleted,
     });
   }
 
-  async findByUserAndPlace(userId: string, placeId: string): Promise<PlaceReviewOrmEntity | null> {
+  async findByUserAndPlace(
+    userId: string,
+    placeId: string,
+  ): Promise<PlaceReviewOrmEntity | null> {
     return this.reviewRepository.findOne({
       where: { userId, placeId },
     });
@@ -59,7 +67,12 @@ export class PlaceReviewRepository {
     return { items, total };
   }
 
-  create(data: Pick<PlaceReviewOrmEntity, 'placeId' | 'userId' | 'rating' | 'comment' | 'imageUrls'>) {
+  create(
+    data: Pick<
+      PlaceReviewOrmEntity,
+      'placeId' | 'userId' | 'rating' | 'comment' | 'imageUrls'
+    >,
+  ) {
     return this.reviewRepository.create(data);
   }
 

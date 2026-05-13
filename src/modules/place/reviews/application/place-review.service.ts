@@ -20,22 +20,32 @@ export class PlaceReviewService {
   ) {}
 
   async getPlaceReviews(placeId: string, page: number, limit: number) {
-    const place = await this.placeReviewRepository.findVisiblePlaceById(placeId);
+    const place =
+      await this.placeReviewRepository.findVisiblePlaceById(placeId);
     if (!place) {
       throw new ResourceNotFoundError('place_not_found');
     }
 
-    const { items, total } = await this.placeReviewRepository.findByPlaceId(placeId, page, limit);
+    const { items, total } = await this.placeReviewRepository.findByPlaceId(
+      placeId,
+      page,
+      limit,
+    );
     return { items, total, page, limit };
   }
 
   async upsertReview(placeId: string, userId: string, dto: CreateReviewDto) {
-    const place = await this.placeReviewRepository.findVisiblePlaceById(placeId);
+    const place =
+      await this.placeReviewRepository.findVisiblePlaceById(placeId);
     if (!place) {
       throw new ResourceNotFoundError('place_not_found');
     }
 
-    const existing = await this.placeReviewRepository.findByUserAndPlaceWithDeleted(userId, placeId);
+    const existing =
+      await this.placeReviewRepository.findByUserAndPlaceWithDeleted(
+        userId,
+        placeId,
+      );
     const imageUrls = dto.imageUrls ?? null;
     const comment = dto.comment ?? null;
 
@@ -97,7 +107,11 @@ export class PlaceReviewService {
     return saved;
   }
 
-  async updateOwnReview(reviewId: string, userId: string, dto: UpdateReviewDto) {
+  async updateOwnReview(
+    reviewId: string,
+    userId: string,
+    dto: UpdateReviewDto,
+  ) {
     const review = await this.placeReviewRepository.findById(reviewId);
     if (!review) {
       throw new ResourceNotFoundError('review_not_found');

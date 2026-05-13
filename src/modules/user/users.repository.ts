@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { SsoProvider } from './interfaces/user-identity.interface.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -75,7 +76,9 @@ export class UsersRepository {
     provider: string,
     providerId: string,
   ): Promise<User | null> {
-    return this.repo.findOne({ where: { provider: provider as any, providerId } });
+    return this.repo.findOne({
+      where: { provider: provider as SsoProvider, providerId },
+    });
   }
 
   async create(data: Partial<User>): Promise<User> {

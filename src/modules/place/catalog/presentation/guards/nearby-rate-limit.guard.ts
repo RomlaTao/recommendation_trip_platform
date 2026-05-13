@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import type { Request } from 'express';
 
 interface HitBucket {
@@ -27,7 +33,9 @@ export class NearbyRateLimitGuard implements CanActivate {
       throw new HttpException(
         {
           message: 'too_many_nearby_requests',
-          retryAfterSeconds: Math.ceil((bucket.windowStartMs + this.windowMs - now) / 1000),
+          retryAfterSeconds: Math.ceil(
+            (bucket.windowStartMs + this.windowMs - now) / 1000,
+          ),
         },
         HttpStatus.TOO_MANY_REQUESTS,
       );

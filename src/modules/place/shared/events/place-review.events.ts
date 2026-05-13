@@ -33,9 +33,14 @@ export interface ReviewDeletedEvent extends BaseReviewEventPayload {
   rating: number;
 }
 
-export type PlaceReviewEventPayload = ReviewCreatedEvent | ReviewUpdatedEvent | ReviewDeletedEvent;
+export type PlaceReviewEventPayload =
+  | ReviewCreatedEvent
+  | ReviewUpdatedEvent
+  | ReviewDeletedEvent;
 
-export interface PlaceReviewDomainEvent<TPayload extends PlaceReviewEventPayload = PlaceReviewEventPayload> {
+export interface PlaceReviewDomainEvent<
+  TPayload extends PlaceReviewEventPayload = PlaceReviewEventPayload,
+> {
   metadata: PlaceReviewEventMetadata;
   payload: TPayload;
 }
@@ -62,21 +67,27 @@ export interface PlaceRatingUpdatedDomainEvent {
   payload: PlaceRatingUpdatedEventPayload;
 }
 
-export function createReviewCreatedEvent(payload: ReviewCreatedEvent): PlaceReviewDomainEvent<ReviewCreatedEvent> {
+export function createReviewCreatedEvent(
+  payload: ReviewCreatedEvent,
+): PlaceReviewDomainEvent<ReviewCreatedEvent> {
   return {
     metadata: createMetadata('ReviewCreated', payload.reviewId),
     payload,
   };
 }
 
-export function createReviewUpdatedEvent(payload: ReviewUpdatedEvent): PlaceReviewDomainEvent<ReviewUpdatedEvent> {
+export function createReviewUpdatedEvent(
+  payload: ReviewUpdatedEvent,
+): PlaceReviewDomainEvent<ReviewUpdatedEvent> {
   return {
     metadata: createMetadata('ReviewUpdated', payload.reviewId),
     payload,
   };
 }
 
-export function createReviewDeletedEvent(payload: ReviewDeletedEvent): PlaceReviewDomainEvent<ReviewDeletedEvent> {
+export function createReviewDeletedEvent(
+  payload: ReviewDeletedEvent,
+): PlaceReviewDomainEvent<ReviewDeletedEvent> {
   return {
     metadata: createMetadata('ReviewDeleted', payload.reviewId),
     payload,

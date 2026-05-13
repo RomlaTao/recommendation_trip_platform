@@ -37,9 +37,15 @@ export class CreateNotificationsTable1760000005000 implements MigrationInterface
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_notifications_is_read";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_notifications_recipient_user_id";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_notifications_source_event_id";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_notifications_is_read";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_notifications_recipient_user_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_notifications_source_event_id";`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "notifications";`);
   }
 }

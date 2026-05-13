@@ -110,7 +110,9 @@ export class PlaceManagementAggregate {
     });
   }
 
-  static reconstitute(snapshot: PlaceManagementSnapshot): PlaceManagementAggregate {
+  static reconstitute(
+    snapshot: PlaceManagementSnapshot,
+  ): PlaceManagementAggregate {
     return new PlaceManagementAggregate(snapshot);
   }
 
@@ -144,11 +146,17 @@ export class PlaceManagementAggregate {
       this.snapshot.status !== PlaceManagementStatus.DRAFT &&
       this.snapshot.status !== PlaceManagementStatus.REJECTED
     ) {
-      throw new InvalidWorkflowException('place_can_only_submit_from_draft_or_rejected');
+      throw new InvalidWorkflowException(
+        'place_can_only_submit_from_draft_or_rejected',
+      );
     }
     this.snapshot.status = PlaceManagementStatus.PENDING_REVIEW;
     this.pendingEvents.push(
-      new PlaceSubmittedEvent(this.snapshot.id, actor.userId, this.snapshot.partnerId),
+      new PlaceSubmittedEvent(
+        this.snapshot.id,
+        actor.userId,
+        this.snapshot.partnerId,
+      ),
     );
   }
 
@@ -158,12 +166,18 @@ export class PlaceManagementAggregate {
       throw new PlaceOwnershipException('place_approve_requires_permission');
     }
     if (this.snapshot.status !== PlaceManagementStatus.PENDING_REVIEW) {
-      throw new InvalidWorkflowException('place_can_only_approve_from_pending_review');
+      throw new InvalidWorkflowException(
+        'place_can_only_approve_from_pending_review',
+      );
     }
     this.snapshot.status = PlaceManagementStatus.APPROVED;
     this.snapshot.rejectionReason = null;
     this.pendingEvents.push(
-      new PlaceApprovedEvent(this.snapshot.id, actor.userId, this.snapshot.partnerId),
+      new PlaceApprovedEvent(
+        this.snapshot.id,
+        actor.userId,
+        this.snapshot.partnerId,
+      ),
     );
   }
 
@@ -173,7 +187,9 @@ export class PlaceManagementAggregate {
       throw new PlaceOwnershipException('place_reject_requires_permission');
     }
     if (this.snapshot.status !== PlaceManagementStatus.PENDING_REVIEW) {
-      throw new InvalidWorkflowException('place_can_only_reject_from_pending_review');
+      throw new InvalidWorkflowException(
+        'place_can_only_reject_from_pending_review',
+      );
     }
     if (!reason.trim()) {
       throw new InvalidWorkflowException('place_reject_reason_required');
@@ -197,22 +213,30 @@ export class PlaceManagementAggregate {
       this.snapshot.status !== PlaceManagementStatus.DRAFT &&
       this.snapshot.status !== PlaceManagementStatus.REJECTED
     ) {
-      throw new InvalidWorkflowException('place_can_only_update_in_draft_or_rejected');
+      throw new InvalidWorkflowException(
+        'place_can_only_update_in_draft_or_rejected',
+      );
     }
 
     this.snapshot.name = input.name ?? this.snapshot.name;
     this.snapshot.description =
-      input.description === undefined ? this.snapshot.description : input.description;
+      input.description === undefined
+        ? this.snapshot.description
+        : input.description;
     this.snapshot.address = input.address ?? this.snapshot.address;
     this.snapshot.lat = input.lat ?? this.snapshot.lat;
     this.snapshot.lng = input.lng ?? this.snapshot.lng;
     this.snapshot.categoryId = input.categoryId ?? this.snapshot.categoryId;
     this.snapshot.openingHours =
-      input.openingHours === undefined ? this.snapshot.openingHours : input.openingHours;
+      input.openingHours === undefined
+        ? this.snapshot.openingHours
+        : input.openingHours;
     this.snapshot.imageUrls =
       input.imageUrls === undefined ? this.snapshot.imageUrls : input.imageUrls;
     this.snapshot.thumbnailUrl =
-      input.thumbnailUrl === undefined ? this.snapshot.thumbnailUrl : input.thumbnailUrl;
+      input.thumbnailUrl === undefined
+        ? this.snapshot.thumbnailUrl
+        : input.thumbnailUrl;
     this.snapshot.googlePlaceId =
       input.googlePlaceId === undefined
         ? this.snapshot.googlePlaceId
@@ -228,14 +252,20 @@ export class PlaceManagementAggregate {
     this.snapshot.deletedByUserId = actor.userId;
     this.snapshot.deletedByRole = PlaceDeletionActorRole.OWNER;
     this.pendingEvents.push(
-      new PlaceDeletedByOwnerEvent(this.snapshot.id, actor.userId, this.snapshot.partnerId),
+      new PlaceDeletedByOwnerEvent(
+        this.snapshot.id,
+        actor.userId,
+        this.snapshot.partnerId,
+      ),
     );
   }
 
   deleteByAdmin(actor: PlaceActorContext, reason: string): void {
     this.ensureNotDeleted();
     if (!hasAdminDeletePermission(actor)) {
-      throw new PlaceOwnershipException('place_delete_requires_admin_permission');
+      throw new PlaceOwnershipException(
+        'place_delete_requires_admin_permission',
+      );
     }
     const trimmedReason = reason.trim();
     if (!trimmedReason) {
@@ -261,20 +291,30 @@ export class PlaceManagementAggregate {
     this.snapshot.deletedByUserId = null;
     this.snapshot.deletedByRole = null;
     this.pendingEvents.push(
-      new PlaceRestoredByOwnerEvent(this.snapshot.id, actor.userId, this.snapshot.partnerId),
+      new PlaceRestoredByOwnerEvent(
+        this.snapshot.id,
+        actor.userId,
+        this.snapshot.partnerId,
+      ),
     );
   }
 
   restoreByAdmin(actor: PlaceActorContext): void {
     this.ensureDeleted();
     if (!hasAdminDeletePermission(actor)) {
-      throw new PlaceOwnershipException('place_restore_requires_admin_permission');
+      throw new PlaceOwnershipException(
+        'place_restore_requires_admin_permission',
+      );
     }
     this.snapshot.deletedReason = null;
     this.snapshot.deletedByUserId = null;
     this.snapshot.deletedByRole = null;
     this.pendingEvents.push(
-      new PlaceRestoredByAdminEvent(this.snapshot.id, actor.userId, this.snapshot.partnerId),
+      new PlaceRestoredByAdminEvent(
+        this.snapshot.id,
+        actor.userId,
+        this.snapshot.partnerId,
+      ),
     );
   }
 

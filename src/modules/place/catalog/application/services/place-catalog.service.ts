@@ -65,7 +65,9 @@ export class PlaceCatalogService {
     return this.repository.listCategories();
   }
 
-  getNearbyPlaces(input: GetNearbyPlacesInput): Promise<NearbyPlaceReadModel[]> {
+  getNearbyPlaces(
+    input: GetNearbyPlacesInput,
+  ): Promise<NearbyPlaceReadModel[]> {
     const query: FindNearbyPlacesQuery = {
       lat: input.lat,
       lng: input.lng,

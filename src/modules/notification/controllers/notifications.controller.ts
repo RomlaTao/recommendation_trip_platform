@@ -30,6 +30,15 @@ import { ListNotificationsQueryDto } from '../dto/list-notifications.query.dto.j
 import { UpsertNotificationPreferenceDto } from '../dto/upsert-notification-preference.dto.js';
 import { NotificationService } from '../services/notification.service.js';
 import { NOTIFICATION_PREFERENCE_TYPES } from '../notification.constants.js';
+import type { NotificationPreferenceType } from '../notification.types.js';
+
+function isNotificationPreferenceType(
+  value: string,
+): value is NotificationPreferenceType {
+  return (Object.values(NOTIFICATION_PREFERENCE_TYPES) as string[]).includes(
+    value,
+  );
+}
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -79,7 +88,9 @@ export class NotificationsController {
   @Put('preferences/:type')
   @HttpCode(HttpStatus.OK)
   @RequirePermissions('notifications:update')
-  @ApiOperation({ summary: 'Update current user notification preference by type' })
+  @ApiOperation({
+    summary: 'Update current user notification preference by type',
+  })
   @ApiParam({
     name: 'type',
     enum: Object.values(NOTIFICATION_PREFERENCE_TYPES),
@@ -90,9 +101,9 @@ export class NotificationsController {
     @Param('type') type: string,
     @Body() dto: UpsertNotificationPreferenceDto,
   ) {
-    if (!Object.values(NOTIFICATION_PREFERENCE_TYPES).includes(type as any)) {
+    if (!isNotificationPreferenceType(type)) {
       throw new BadRequestException('notification_preference_type_invalid');
     }
-    return this.notificationService.upsertMyPreference(user.sub, type as any, dto);
+    return this.notificationService.upsertMyPreference(user.sub, type, dto);
   }
 }
