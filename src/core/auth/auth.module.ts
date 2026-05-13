@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, type JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from '../../modules/user/users.module.js';
@@ -37,7 +37,10 @@ import { PermissionModule } from '../../modules/permission/permission.module.js'
         // `as any` cast: JwtSignOptions.expiresIn expects StringValue (branded ms type),
         // but our config value is a plain string. At runtime the values are identical.
         signOptions: {
-          expiresIn: configService.get<string>('token.accessExpiresIn', '15m') as any,
+          expiresIn: configService.get<string>(
+            'token.accessExpiresIn',
+            '15m',
+          ) as JwtSignOptions['expiresIn'],
         },
       }),
       inject: [ConfigService],

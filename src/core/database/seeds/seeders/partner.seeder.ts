@@ -21,7 +21,9 @@ export class PartnerSeeder {
       where: { slug: PLATFORM_PARTNER_SLUG },
     });
     if (existing) {
-      this.logger.log(`  [SKIP] Partner already exists: ${PLATFORM_PARTNER_SLUG}`);
+      this.logger.log(
+        `  [SKIP] Partner already exists: ${PLATFORM_PARTNER_SLUG}`,
+      );
       return existing;
     }
 

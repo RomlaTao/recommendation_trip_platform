@@ -53,10 +53,7 @@ export class UserSeeder {
       {
         email: this.configService.get<string>('MODERATOR_EMAIL', ''),
         username: this.configService.get<string>('MODERATOR_USERNAME', ''),
-        plainPassword: this.configService.get<string>(
-          'MODERATOR_PASSWORD',
-          '',
-        ),
+        plainPassword: this.configService.get<string>('MODERATOR_PASSWORD', ''),
         roleCode: this.configService.get<string>(
           'MODERATOR_ROLE_CODE',
           'MODERATOR',
@@ -78,7 +75,12 @@ export class UserSeeder {
     const entries = this.buildEntries();
 
     for (const data of entries) {
-      if (!data.email || !data.username || !data.plainPassword || !data.roleCode) {
+      if (
+        !data.email ||
+        !data.username ||
+        !data.plainPassword ||
+        !data.roleCode
+      ) {
         this.logger.warn(
           `  [WARN] Incomplete env config for role "${data.roleCode}" — check ADMIN_* / MODERATOR_* vars in .env`,
         );

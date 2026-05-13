@@ -7,7 +7,10 @@ import { PlaceOrmEntity } from './infrastructure/persistence/typeorm/place.orm-e
 import { AdminPlaceController } from './presentation/controllers/admin.controller.js';
 import { PartnerPlaceController } from './presentation/controllers/partner.controller.js';
 import { UserPlaceController } from './presentation/controllers/user.controller.js';
-import { PLACE_MANAGEMENT_EVENT_BUS, PLACE_MANAGEMENT_REPOSITORY } from './application/management.di-tokens.js';
+import {
+  PLACE_MANAGEMENT_EVENT_BUS,
+  PLACE_MANAGEMENT_REPOSITORY,
+} from './application/management.di-tokens.js';
 import { PlaceManagementRepository } from './infrastructure/persistence/typeorm/management.repository.js';
 import { PlaceMapper } from './infrastructure/persistence/mappers/place.mapper.js';
 import { NestEventBusAdapter } from './infrastructure/events/nest-event-bus.adapter.js';
@@ -59,7 +62,11 @@ import { RejectPlaceRegistrationRequestUseCase } from './application/use-cases/r
       },
     }),
   ],
-  controllers: [AdminPlaceController, PartnerPlaceController, UserPlaceController],
+  controllers: [
+    AdminPlaceController,
+    PartnerPlaceController,
+    UserPlaceController,
+  ],
   providers: [
     PlaceMapper,
     {

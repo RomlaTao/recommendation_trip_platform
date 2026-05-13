@@ -43,7 +43,9 @@ export class PermissionsController {
   @ApiOperation({ summary: 'Create permission' })
   @ApiBody({ type: CreatePermissionDto })
   @ApiOkResponse({ description: 'Permission created', type: Permission })
-  async createPermission(@Body() dto: CreatePermissionDto): Promise<Permission> {
+  async createPermission(
+    @Body() dto: CreatePermissionDto,
+  ): Promise<Permission> {
     return this.permissionService.createPermission(dto);
   }
 
@@ -54,9 +56,12 @@ export class PermissionsController {
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   @ApiOkResponse({ description: 'Permissions list loaded' })
-  async listPermissions(
-    @Query() query: PaginationDto,
-  ): Promise<{ items: Permission[]; total: number; page: number; limit: number }> {
+  async listPermissions(@Query() query: PaginationDto): Promise<{
+    items: Permission[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const safePage = Math.max(1, query.page ?? 1);
     const safeLimit = Math.min(100, Math.max(1, query.limit ?? 20));
     const { permissions, total } = await this.permissionService.findMany(

@@ -1,11 +1,6 @@
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 
 /**
  * DTO — POST /auth/register
@@ -19,7 +14,6 @@ export class RegisterDto {
   @IsEmail()
   @Transform(({ value }: { value: string }) => value?.toLowerCase().trim())
   email: string;
-
 
   @ApiProperty({ example: 'john_doe' })
   @IsString()

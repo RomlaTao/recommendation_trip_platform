@@ -1,5 +1,6 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
+import type { Queue } from 'bull';
 import {
   APPLY_REVIEW_EVENT_JOB,
   PLACE_RATING_SNAPSHOT_QUEUE,
@@ -11,7 +12,7 @@ import { PlaceReviewEventPublisherPort } from '../../application/ports/place-rev
 export class BullPlaceReviewEventPublisher implements PlaceReviewEventPublisherPort {
   constructor(
     @InjectQueue(PLACE_RATING_SNAPSHOT_QUEUE)
-    private readonly queue: any,
+    private readonly queue: Queue,
   ) {}
 
   async publish(event: PlaceReviewDomainEvent): Promise<void> {

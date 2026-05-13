@@ -23,9 +23,14 @@ export class ApprovePlaceRegistrationRequestUseCase {
     private readonly eventBus: PlaceManagementEventBusPort,
   ) {}
 
-  async execute(requestId: string, reviewerUserId: string): Promise<{ requestId: string; placeId: string }> {
+  async execute(
+    requestId: string,
+    reviewerUserId: string,
+  ): Promise<{ requestId: string; placeId: string }> {
     const result = await this.dataSource.transaction(async (manager) => {
-      const requestRepo = manager.getRepository(PlaceRegistrationRequestOrmEntity);
+      const requestRepo = manager.getRepository(
+        PlaceRegistrationRequestOrmEntity,
+      );
       const partnerRepo = manager.getRepository(PartnerOrmEntity);
       const placeRepo = manager.getRepository(PlaceOrmEntity);
 
@@ -37,7 +42,9 @@ export class ApprovePlaceRegistrationRequestUseCase {
         throw new ResourceNotFoundError('place_registration_request_not_found');
       }
       if (request.status !== PlaceRegistrationRequestStatus.PENDING) {
-        throw new PlaceRegistrationRequestInvalidStateError('place_registration_request_not_pending');
+        throw new PlaceRegistrationRequestInvalidStateError(
+          'place_registration_request_not_pending',
+        );
       }
 
       const partner = await partnerRepo.findOne({

@@ -15,7 +15,11 @@ export class RejectPlaceRegistrationRequestUseCase {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async execute(requestId: string, reviewerUserId: string, reason: string): Promise<{ success: true }> {
+  async execute(
+    requestId: string,
+    reviewerUserId: string,
+    reason: string,
+  ): Promise<{ success: true }> {
     const request = await this.requestRepository.findOne({
       where: { id: requestId, deletedAt: IsNull() },
     });
@@ -23,7 +27,9 @@ export class RejectPlaceRegistrationRequestUseCase {
       throw new ResourceNotFoundError('place_registration_request_not_found');
     }
     if (request.status !== PlaceRegistrationRequestStatus.PENDING) {
-      throw new PlaceRegistrationRequestInvalidStateError('place_registration_request_not_pending');
+      throw new PlaceRegistrationRequestInvalidStateError(
+        'place_registration_request_not_pending',
+      );
     }
 
     request.status = PlaceRegistrationRequestStatus.REJECTED;

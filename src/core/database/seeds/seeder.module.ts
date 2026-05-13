@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import databaseConfig, {
-  DatabaseConfig,
-} from '../../config/database.config';
+import databaseConfig, { DatabaseConfig } from '../../config/database.config';
 import { Role } from '../../../modules/permission/entities/role.entity';
 import { Permission } from '../../../modules/permission/entities/permission.entity';
 import { RolePermission } from '../../../modules/permission/entities/role-permission.entity';

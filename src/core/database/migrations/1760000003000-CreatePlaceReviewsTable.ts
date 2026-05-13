@@ -31,8 +31,12 @@ export class CreatePlaceReviewsTable1760000003000 implements MigrationInterface 
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_place_reviews_user_place_unique";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_place_reviews_place_id";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_place_reviews_user_place_unique";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_place_reviews_place_id";`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "place_reviews";`);
   }
 }

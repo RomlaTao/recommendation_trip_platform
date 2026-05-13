@@ -22,5 +22,7 @@ export interface CreateDraftTripResult {
 }
 
 export abstract class CreateDraftTripHandler {
-  abstract execute(command: CreateDraftTripCommand): Promise<CreateDraftTripResult>;
+  abstract execute(
+    command: CreateDraftTripCommand,
+  ): Promise<CreateDraftTripResult>;
 }

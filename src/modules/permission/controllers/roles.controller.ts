@@ -62,7 +62,10 @@ export class RolesController {
   ): Promise<{ items: Role[]; total: number; page: number; limit: number }> {
     const safePage = Math.max(1, query.page ?? 1);
     const safeLimit = Math.min(100, Math.max(1, query.limit ?? 20));
-    const { roles, total } = await this.roleService.findMany(safePage, safeLimit);
+    const { roles, total } = await this.roleService.findMany(
+      safePage,
+      safeLimit,
+    );
     return {
       items: roles,
       total,
@@ -78,7 +81,9 @@ export class RolesController {
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiOkResponse({ description: 'Role detail loaded' })
   @ApiNotFoundResponse({ description: 'Role not found' })
-  async getRoleById(@Param('id', new ParseUUIDPipe()) id: string): Promise<Role> {
+  async getRoleById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<Role> {
     return this.roleService.getByIdWithPermissionsOrThrow(id);
   }
 
@@ -88,7 +93,10 @@ export class RolesController {
   @ApiOperation({ summary: 'Assign additional permissions to role' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiBody({ type: ReplaceRolePermissionsDto })
-  @ApiOkResponse({ description: 'Permissions assigned', type: [RolePermission] })
+  @ApiOkResponse({
+    description: 'Permissions assigned',
+    type: [RolePermission],
+  })
   @ApiNotFoundResponse({ description: 'Role not found' })
   async assignPermissions(
     @Param('id', new ParseUUIDPipe()) id: string,

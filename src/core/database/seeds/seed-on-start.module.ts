@@ -1,4 +1,9 @@
-import { Injectable, Module, OnApplicationBootstrap, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Module,
+  OnApplicationBootstrap,
+  Logger,
+} from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from '../../../modules/permission/entities/role.entity';
 import { Permission } from '../../../modules/permission/entities/permission.entity';

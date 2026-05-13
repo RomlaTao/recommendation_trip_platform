@@ -18,7 +18,11 @@ export interface TripDomainEvent {
 abstract class BaseTripDomainEvent implements TripDomainEvent {
   readonly metadata: TripDomainEventMetadata;
 
-  protected constructor(eventType: string, aggregateId: string, eventVersion = 1) {
+  protected constructor(
+    eventType: string,
+    aggregateId: string,
+    eventVersion = 1,
+  ) {
     this.metadata = {
       eventId: randomUUID(),
       eventType,

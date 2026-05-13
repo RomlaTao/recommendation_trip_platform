@@ -91,7 +91,6 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
-  const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
 
   applyExpressMiddleware(app, configService);
   setupGlobalAppConfig(app, configService, reflector);
@@ -100,9 +99,7 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
 
-  console.log(
-    `🚀 Api docs is running on: http://localhost:${port}/api-docs`,
-  );
+  console.log(`🚀 Api docs is running on: http://localhost:${port}/api-docs`);
 }
 
-bootstrap();
+void bootstrap();

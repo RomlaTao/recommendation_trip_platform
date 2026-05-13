@@ -16,7 +16,11 @@ export interface DomainEvent {
 abstract class BasePlaceManagementEvent implements DomainEvent {
   readonly metadata: DomainEventMetadata;
 
-  protected constructor(eventType: string, aggregateId: string, eventVersion = 1) {
+  protected constructor(
+    eventType: string,
+    aggregateId: string,
+    eventVersion = 1,
+  ) {
     this.metadata = {
       eventId: randomUUID(),
       eventType,

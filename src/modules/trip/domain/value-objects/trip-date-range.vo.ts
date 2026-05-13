@@ -12,18 +12,25 @@ export class TripDateRangeVO {
     this.endDate = TripDateRangeVO.normalizeDate(endDate);
 
     if (this.startDate.getTime() > this.endDate.getTime()) {
-      throw new InvalidTripDateRangeError('trip_start_date_must_be_before_or_equal_end_date');
+      throw new InvalidTripDateRangeError(
+        'trip_start_date_must_be_before_or_equal_end_date',
+      );
     }
   }
 
   containsDate(date: Date | string): boolean {
     const target = TripDateRangeVO.normalizeDate(date).getTime();
-    return target >= this.startDate.getTime() && target <= this.endDate.getTime();
+    return (
+      target >= this.startDate.getTime() && target <= this.endDate.getTime()
+    );
   }
 
   durationInDays(): number {
     return (
-      Math.floor((this.endDate.getTime() - this.startDate.getTime()) / MILLISECONDS_IN_DAY) + 1
+      Math.floor(
+        (this.endDate.getTime() - this.startDate.getTime()) /
+          MILLISECONDS_IN_DAY,
+      ) + 1
     );
   }
 
@@ -40,11 +47,19 @@ export class TripDateRangeVO {
         throw new InvalidTripDateRangeError('trip_date_is_invalid');
       }
 
-      return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
+      return new Date(
+        Date.UTC(
+          value.getUTCFullYear(),
+          value.getUTCMonth(),
+          value.getUTCDate(),
+        ),
+      );
     }
 
     if (!DATE_ONLY_REGEX.test(value)) {
-      throw new InvalidTripDateRangeError('trip_date_format_must_be_yyyy_mm_dd');
+      throw new InvalidTripDateRangeError(
+        'trip_date_format_must_be_yyyy_mm_dd',
+      );
     }
 
     const parsed = new Date(`${value}T00:00:00.000Z`);

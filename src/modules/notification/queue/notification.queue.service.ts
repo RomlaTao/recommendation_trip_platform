@@ -1,7 +1,10 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import type { Queue } from 'bull';
-import { NOTIFICATION_JOBS, NOTIFICATION_QUEUE_NAME } from '../notification.constants.js';
+import {
+  NOTIFICATION_JOBS,
+  NOTIFICATION_QUEUE_NAME,
+} from '../notification.constants.js';
 import { SendEmailNotificationJobPayload } from '../notification.types.js';
 
 @Injectable()
@@ -11,7 +14,9 @@ export class NotificationQueueService {
     private readonly notificationQueue: Queue,
   ) {}
 
-  async enqueueSendEmail(payload: SendEmailNotificationJobPayload): Promise<void> {
+  async enqueueSendEmail(
+    payload: SendEmailNotificationJobPayload,
+  ): Promise<void> {
     await this.notificationQueue.add(NOTIFICATION_JOBS.SEND_EMAIL, payload, {
       attempts: 5,
       backoff: {

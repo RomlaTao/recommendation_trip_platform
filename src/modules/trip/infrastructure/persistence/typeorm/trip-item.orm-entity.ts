@@ -9,7 +9,9 @@ export class TripItemOrmEntity extends BaseEntity {
   @Column({ type: 'uuid' })
   tripDayId: string;
 
-  @ManyToOne(() => TripDayOrmEntity, (tripDay) => tripDay.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => TripDayOrmEntity, (tripDay) => tripDay.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'tripDayId' })
   tripDay: TripDayOrmEntity;
 

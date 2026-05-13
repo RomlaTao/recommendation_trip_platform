@@ -86,8 +86,12 @@ export class RoleService {
       where: { id: In(permissionIds) },
     });
 
-    const permissionIdSet = new Set(permissions.map((permission) => permission.id));
-    const validPermissionIds = permissionIds.filter((id) => permissionIdSet.has(id));
+    const permissionIdSet = new Set(
+      permissions.map((permission) => permission.id),
+    );
+    const validPermissionIds = permissionIds.filter((id) =>
+      permissionIdSet.has(id),
+    );
     if (validPermissionIds.length === 0) {
       return [];
     }
@@ -134,7 +138,11 @@ export class RoleService {
       );
     }
     return this.rolePermissionRepository.find({
-      where: { roleId, permissionId: In(validPermissionIds), deletedAt: IsNull() },
+      where: {
+        roleId,
+        permissionId: In(validPermissionIds),
+        deletedAt: IsNull(),
+      },
     });
   }
 

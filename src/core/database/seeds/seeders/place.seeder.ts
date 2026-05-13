@@ -41,7 +41,9 @@ export class PlaceSeeder {
     private readonly categoryRepository: Repository<PlaceCategoryOrmEntity>,
   ) {}
 
-  private async findOrCreateTarget(row: PlaceCsvRow): Promise<PlaceOrmEntity | null> {
+  private async findOrCreateTarget(
+    row: PlaceCsvRow,
+  ): Promise<PlaceOrmEntity | null> {
     const byId = await this.placeRepository.findOne({ where: { id: row.id } });
     if (byId) return byId;
 
@@ -61,7 +63,9 @@ export class PlaceSeeder {
       where: { slug: PLATFORM_PARTNER_SLUG },
     });
     if (!partner) {
-      this.logger.warn('  [WARN] Platform partner missing. Run PartnerSeeder first.');
+      this.logger.warn(
+        '  [WARN] Platform partner missing. Run PartnerSeeder first.',
+      );
       return;
     }
 
@@ -84,7 +88,8 @@ export class PlaceSeeder {
         continue;
       }
 
-      const place = (await this.findOrCreateTarget(row)) ?? this.placeRepository.create();
+      const place =
+        (await this.findOrCreateTarget(row)) ?? this.placeRepository.create();
       const wasNew = !place.id;
 
       if (wasNew) {

@@ -31,7 +31,13 @@ import { TripItemOrmEntity } from './infrastructure/persistence/typeorm/trip-ite
 import { TripOrmEntity } from './infrastructure/persistence/typeorm/trip.orm-entity.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TripOrmEntity, TripDayOrmEntity, TripItemOrmEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      TripOrmEntity,
+      TripDayOrmEntity,
+      TripItemOrmEntity,
+    ]),
+  ],
   controllers: [TripController],
   providers: [
     TripMapper,

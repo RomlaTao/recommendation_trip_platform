@@ -68,7 +68,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       : payload.roleCode
         ? [payload.roleCode]
         : [];
-    const permissions = await this.permissionService.getPermissionCodesByRoleCodes(roleCodes);
+    const permissions =
+      await this.permissionService.getPermissionCodesByRoleCodes(roleCodes);
 
     // Attach dynamic permissions to req.user for PermissionGuard
     return {

@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
-import { ListMyTripsHandler, ListMyTripsQuery } from '../handles/list-my-trips.handler.js';
+import {
+  ListMyTripsHandler,
+  ListMyTripsQuery,
+} from '../handles/list-my-trips.handler.js';
 import type { TripAggregate } from '../../../domain/aggregates/trip.aggregate.js';
 
 @Injectable()

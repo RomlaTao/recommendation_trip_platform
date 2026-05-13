@@ -63,7 +63,9 @@ export class PermissionService {
   }
 
   async getPermissionCodesByRoleCode(roleCode: string): Promise<string[]> {
-    const role = await this.roleRepository.findOne({ where: { code: roleCode } });
+    const role = await this.roleRepository.findOne({
+      where: { code: roleCode },
+    });
     if (!role) {
       return [];
     }

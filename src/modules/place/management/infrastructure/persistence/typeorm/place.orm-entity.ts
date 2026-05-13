@@ -8,9 +8,13 @@ import { PartnerOrmEntity } from './partner.orm-entity.js';
 import { PlaceCategoryOrmEntity } from './place-category.orm-entity.js';
 
 @Entity('places')
-@Index('IDX_places_catalog_active_category_updated', ['categoryId', 'updatedAt'], {
-  where: `"deletedAt" IS NULL AND "status" = 'APPROVED'`,
-})
+@Index(
+  'IDX_places_catalog_active_category_updated',
+  ['categoryId', 'updatedAt'],
+  {
+    where: `"deletedAt" IS NULL AND "status" = 'APPROVED'`,
+  },
+)
 @Index('IDX_places_catalog_active_rating_id', ['averageRating', 'id'], {
   where: `"deletedAt" IS NULL AND "status" = 'APPROVED'`,
 })
@@ -79,7 +83,8 @@ export class PlaceOrmEntity extends BaseEntity {
   ratingLastUpdatedAt?: Date | null;
 
   @ApiPropertyOptional({
-    description: 'PostgreSQL allows multiple NULLs on a UNIQUE column when unset.',
+    description:
+      'PostgreSQL allows multiple NULLs on a UNIQUE column when unset.',
   })
   @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
   googlePlaceId?: string | null;

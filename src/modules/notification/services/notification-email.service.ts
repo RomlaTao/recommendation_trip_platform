@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { createTransport } from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 import { EmailConfig } from '../../../core/config/email.config.js';
 import {
   PlaceApprovedNotificationPayload,
@@ -12,11 +13,11 @@ import {
 @Injectable()
 export class NotificationEmailService {
   private readonly emailConfig: EmailConfig;
-  private readonly transporter: nodemailer.Transporter;
+  private readonly transporter: Transporter;
 
   constructor(private readonly configService: ConfigService) {
     this.emailConfig = this.configService.get<EmailConfig>('email')!;
-    this.transporter = nodemailer.createTransport({
+    this.transporter = createTransport({
       host: this.emailConfig.host,
       port: this.emailConfig.port,
       secure: this.emailConfig.secure,
@@ -27,7 +28,9 @@ export class NotificationEmailService {
     });
   }
 
-  async sendVerifyEmail(payload: VerifyEmailNotificationPayload): Promise<void> {
+  async sendVerifyEmail(
+    payload: VerifyEmailNotificationPayload,
+  ): Promise<void> {
     const verifyUrl = `${this.emailConfig.verifyBaseUrl}?token=${encodeURIComponent(payload.verifyToken)}`;
     const displayName = payload.username?.trim() || 'there';
 
@@ -47,7 +50,9 @@ export class NotificationEmailService {
     });
   }
 
-  async sendPlaceApprovedEmail(payload: PlaceApprovedNotificationPayload): Promise<void> {
+  async sendPlaceApprovedEmail(
+    payload: PlaceApprovedNotificationPayload,
+  ): Promise<void> {
     await this.transporter.sendMail({
       from: this.emailConfig.from,
       to: payload.to,
@@ -63,7 +68,9 @@ export class NotificationEmailService {
     });
   }
 
-  async sendPlaceRejectedEmail(payload: PlaceRejectedNotificationPayload): Promise<void> {
+  async sendPlaceRejectedEmail(
+    payload: PlaceRejectedNotificationPayload,
+  ): Promise<void> {
     await this.transporter.sendMail({
       from: this.emailConfig.from,
       to: payload.to,

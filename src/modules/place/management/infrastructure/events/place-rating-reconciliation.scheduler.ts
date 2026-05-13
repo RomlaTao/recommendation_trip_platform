@@ -1,4 +1,6 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
+import type { Job } from 'bull';
+import type { Queue } from 'bull';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import {
   PLACE_RATING_SNAPSHOT_QUEUE,
@@ -15,7 +17,7 @@ export class PlaceRatingReconciliationScheduler implements OnModuleInit {
 
   constructor(
     @InjectQueue(PLACE_RATING_SNAPSHOT_QUEUE)
-    private readonly queue: any,
+    private readonly queue: Queue,
     private readonly placeRatingUpdateService: PlaceRatingUpdateService,
     private readonly placeRatingUpdatedPublisher: BullPlaceRatingUpdatedPublisher,
   ) {}
@@ -34,13 +36,18 @@ export class PlaceRatingReconciliationScheduler implements OnModuleInit {
   }
 
   @Process(RECONCILE_RATING_SNAPSHOT_JOB)
-  async handleReconcile(_job: any): Promise<void> {
+  async handleReconcile(_job: Job): Promise<void> {
+    void _job;
     const snapshots = await this.placeRatingUpdateService.reconcile(100);
     for (const snapshot of snapshots) {
-      await this.placeRatingUpdatedPublisher.publish(createPlaceRatingUpdatedEvent(snapshot));
+      await this.placeRatingUpdatedPublisher.publish(
+        createPlaceRatingUpdatedEvent(snapshot),
+      );
     }
     if (snapshots.length > 0) {
-      this.logger.log(`Reconciled place ratings for ${snapshots.length} places`);
+      this.logger.log(
+        `Reconciled place ratings for ${snapshots.length} places`,
+      );
     }
   }
 }

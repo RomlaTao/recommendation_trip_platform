@@ -12,7 +12,15 @@ import { RolesController } from './controllers/roles.controller.js';
 import { PermissionsController } from './controllers/permissions.controller.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Role, Permission, RolePermission, UserRole, User])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Role,
+      Permission,
+      RolePermission,
+      UserRole,
+      User,
+    ]),
+  ],
   controllers: [RolesController, PermissionsController],
   providers: [RoleService, PermissionService, UserRoleService],
   exports: [RoleService, PermissionService, UserRoleService],

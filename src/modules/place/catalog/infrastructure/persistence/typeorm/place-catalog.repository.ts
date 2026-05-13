@@ -57,7 +57,9 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     }
 
     if (query.categoryId) {
-      qb.andWhere('p."categoryId" = :categoryId', { categoryId: query.categoryId });
+      qb.andWhere('p."categoryId" = :categoryId', {
+        categoryId: query.categoryId,
+      });
     }
 
     if (query.minRating !== undefined) {
@@ -92,7 +94,9 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
         });
     }
     if (query.categoryId) {
-      countQb.andWhere('p."categoryId" = :categoryId', { categoryId: query.categoryId });
+      countQb.andWhere('p."categoryId" = :categoryId', {
+        categoryId: query.categoryId,
+      });
     }
     if (query.minRating !== undefined) {
       countQb.andWhere(`${ratingExpression} >= :minRating`, {
@@ -100,7 +104,10 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
       });
     }
 
-    const [rows, total] = await Promise.all([qb.getRawMany<PlaceSearchRow>(), countQb.getCount()]);
+    const [rows, total] = await Promise.all([
+      qb.getRawMany<PlaceSearchRow>(),
+      countQb.getCount(),
+    ]);
 
     return {
       items: rows.map((row) => this.toListItem(row)),
@@ -146,7 +153,12 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     const categories = await this.categoryRepository
       .createQueryBuilder('c')
       .innerJoin(PlaceOrmEntity, 'p', 'p.categoryId = c.id')
-      .select(['c.id AS id', 'c.name AS name', 'c.slug AS slug', 'c.parentId AS "parentId"'])
+      .select([
+        'c.id AS id',
+        'c.name AS name',
+        'c.slug AS slug',
+        'c.parentId AS "parentId"',
+      ])
       .where('c.deletedAt IS NULL')
       .andWhere('p.status = :status', { status: PlaceStatus.APPROVED })
       .andWhere('p.deletedAt IS NULL')
@@ -165,7 +177,9 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     }));
   }
 
-  async findNearby(query: FindNearbyPlacesQuery): Promise<NearbyPlaceReadModel[]> {
+  async findNearby(
+    query: FindNearbyPlacesQuery,
+  ): Promise<NearbyPlaceReadModel[]> {
     const rows = await this.runNearbyQueryWithTimeout(query, 1500);
     return rows.map((row) => ({
       ...this.toListItem(row),
@@ -184,11 +198,13 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
       categoryId: row.categoryId,
       categoryName: row.categoryName,
       seedRating: {
-        averageRating: row.seedAverageRating === null ? null : Number(row.seedAverageRating),
+        averageRating:
+          row.seedAverageRating === null ? null : Number(row.seedAverageRating),
         reviewCount: row.seedReviewCount ?? 0,
       },
       communityRating: {
-        averageRating: row.averageRating === null ? null : Number(row.averageRating),
+        averageRating:
+          row.averageRating === null ? null : Number(row.averageRating),
         reviewCount: row.reviewCount ?? 0,
       },
     };
@@ -202,8 +218,12 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     };
   }
 
-  private applyVisiblePlaceFilter(qb: SelectQueryBuilder<PlaceOrmEntity>): void {
-    qb.andWhere('p."status" = :status', { status: PlaceStatus.APPROVED }).andWhere('p."deletedAt" IS NULL');
+  private applyVisiblePlaceFilter(
+    qb: SelectQueryBuilder<PlaceOrmEntity>,
+  ): void {
+    qb.andWhere('p."status" = :status', {
+      status: PlaceStatus.APPROVED,
+    }).andWhere('p."deletedAt" IS NULL');
   }
 
   private getCatalogSearchExpression(): string {
@@ -225,7 +245,7 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     try {
       await queryRunner.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
 
-      const rows = await queryRunner.query(
+      const rows = (await queryRunner.query(
         `
           SELECT
             p."id" AS "id",
@@ -261,11 +281,17 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
             p."id" ASC
           LIMIT $5
         `,
-        [query.lng, query.lat, PlaceStatus.APPROVED, query.radiusInMeters, query.limit],
-      );
+        [
+          query.lng,
+          query.lat,
+          PlaceStatus.APPROVED,
+          query.radiusInMeters,
+          query.limit,
+        ],
+      )) as NearbySearchRow[];
 
       await queryRunner.commitTransaction();
-      return rows as NearbySearchRow[];
+      return rows;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

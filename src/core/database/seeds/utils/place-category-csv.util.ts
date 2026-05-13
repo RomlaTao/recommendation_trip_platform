@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+/** Read at call time so `.env` loaded by Nest `ConfigModule` is visible (not at module load). */
+function getCategoryCsvPathFromEnv(): string {
+  return process.env.CATEGORY_FOR_PLACES_CSV_PATH ?? '';
+}
+
 export interface PlaceCategoryCsvRow {
   id: string;
   name: string;
@@ -58,8 +63,9 @@ function normalizeText(input: string): string {
 }
 
 export function readPlaceCategoryCsvRows(
-  csvRelativePath = 'dataset/categories_for_places.csv',
+  csvRelativePath = getCategoryCsvPathFromEnv(),
 ): PlaceCategoryCsvRow[] {
+  if (!csvRelativePath) return [];
   const absPath = resolve(process.cwd(), csvRelativePath);
   const raw = readFileSync(absPath, 'utf-8').replace(/^\uFEFF/, '');
   const parsed = parseCsv(raw);
@@ -84,4 +90,3 @@ export function readPlaceCategoryCsvRows(
       };
     });
 }
-

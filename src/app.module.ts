@@ -4,7 +4,9 @@ import { AppController } from './app.controller.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import databaseConfig, { DatabaseConfig } from './core/config/database.config.js';
+import databaseConfig, {
+  DatabaseConfig,
+} from './core/config/database.config.js';
 import tokenConfig from './core/config/token.config.js';
 import queueConfig, { QueueConfig } from './core/config/queue.config.js';
 import emailConfig from './core/config/email.config.js';

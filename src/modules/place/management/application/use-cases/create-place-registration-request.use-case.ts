@@ -23,12 +23,17 @@ export class CreatePlaceRegistrationRequestUseCase {
     private readonly requestRepository: Repository<PlaceRegistrationRequestOrmEntity>,
   ) {}
 
-  async execute(userId: string, dto: CreatePlaceRegistrationRequestDto): Promise<{ id: string }> {
+  async execute(
+    userId: string,
+    dto: CreatePlaceRegistrationRequestDto,
+  ): Promise<{ id: string }> {
     const created = await this.dataSource.transaction(async (manager) => {
       const userRepo = manager.getRepository(User);
       const categoryRepo = manager.getRepository(PlaceCategoryOrmEntity);
       const partnerRepo = manager.getRepository(PartnerOrmEntity);
-      const requestRepo = manager.getRepository(PlaceRegistrationRequestOrmEntity);
+      const requestRepo = manager.getRepository(
+        PlaceRegistrationRequestOrmEntity,
+      );
 
       const requester = await userRepo.findOne({
         where: { id: userId, deletedAt: IsNull() },
@@ -78,7 +83,11 @@ export class CreatePlaceRegistrationRequestUseCase {
       );
     });
     await this.eventBus.publish([
-      new PlaceRegistrationRequestSubmittedEvent(created.id, userId, created.name),
+      new PlaceRegistrationRequestSubmittedEvent(
+        created.id,
+        userId,
+        created.name,
+      ),
     ]);
     return { id: created.id };
   }

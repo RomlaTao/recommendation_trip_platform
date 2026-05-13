@@ -3,7 +3,10 @@ import { randomUUID } from 'node:crypto';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
 import { TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
-import { AddTripDayCommand, AddTripDayHandler } from '../handles/add-trip-day.handler.js';
+import {
+  AddTripDayCommand,
+  AddTripDayHandler,
+} from '../handles/add-trip-day.handler.js';
 
 @Injectable()
 export class AddTripDayHandlerImpl implements AddTripDayHandler {

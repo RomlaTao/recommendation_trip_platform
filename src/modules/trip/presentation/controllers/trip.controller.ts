@@ -69,7 +69,10 @@ export class TripController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create draft trip from client-confirmed payload' })
   @ApiCreatedResponse({ type: TripResponseDto })
-  async createTrip(@CurrentUser() user: JwtPayload, @Body() dto: CreateTripDto): Promise<TripResponseDto> {
+  async createTrip(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateTripDto,
+  ): Promise<TripResponseDto> {
     const created = await this.createDraftTripHandler.execute({
       userId: user.sub,
       title: dto.title,
@@ -90,7 +93,10 @@ export class TripController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List current user trips (paginated)' })
   @ApiOkResponse({ type: [TripResponseDto] })
-  async listTrips(@CurrentUser() user: JwtPayload, @Query() query: PaginationDto): Promise<TripResponseDto[]> {
+  async listTrips(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: PaginationDto,
+  ): Promise<TripResponseDto[]> {
     const trips = await this.listMyTripsHandler.execute({
       userId: user.sub,
       page: query.page,

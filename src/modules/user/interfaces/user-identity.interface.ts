@@ -39,7 +39,5 @@ export interface ExternalUserProfile {
  * (if you ever split into micro-services, extract this to a shared interface).
  */
 export interface IUserIdentityProvider {
-  findOrCreateFromExternalIdentity(
-    profile: ExternalUserProfile,
-  ): Promise<User>;
+  findOrCreateFromExternalIdentity(profile: ExternalUserProfile): Promise<User>;
 }

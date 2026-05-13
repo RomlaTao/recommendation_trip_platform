@@ -1,6 +1,9 @@
 import { Column, Entity, Index } from 'typeorm';
 import { BaseEntity } from '../../../core/database/base.entity.js';
-import type { NotificationChannel, NotificationStatus } from '../notification.types.js';
+import type {
+  NotificationChannel,
+  NotificationStatus,
+} from '../notification.types.js';
 
 @Entity('notification_deliveries')
 export class NotificationDeliveryEntity extends BaseEntity {

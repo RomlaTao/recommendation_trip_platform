@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+/** Read at call time so `.env` loaded by Nest `ConfigModule` is visible (not at module load). */
+function getPlaceCsvPathFromEnv(): string {
+  return process.env.PLACE_CSV_PATH ?? '';
+}
+
 export interface PlaceCsvRow {
   id: string;
   name: string;
@@ -66,8 +71,9 @@ function parseCsv(content: string): string[][] {
 }
 
 export function readPlaceCsvRows(
-  csvRelativePath = 'dataset/places_vungtau_vn_only.csv',
+  csvRelativePath = getPlaceCsvPathFromEnv(),
 ): PlaceCsvRow[] {
+  if (!csvRelativePath) return [];
   const absPath = resolve(process.cwd(), csvRelativePath);
   const raw = readFileSync(absPath, 'utf-8').replace(/^\uFEFF/, '');
   const parsed = parseCsv(raw);

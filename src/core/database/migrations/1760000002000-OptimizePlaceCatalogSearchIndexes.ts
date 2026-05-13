@@ -49,12 +49,26 @@ export class OptimizePlaceCatalogSearchIndexes1760000002000 implements Migration
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_place_categories_name";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_places_category_id";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_places_partner_id";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_places_catalog_active_name_id";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_places_catalog_active_rating_id";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_places_catalog_active_category_updated";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_PLACES_SEARCH_GIN";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_place_categories_name";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_places_category_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_places_partner_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_places_catalog_active_name_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_places_catalog_active_rating_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_places_catalog_active_category_updated";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_PLACES_SEARCH_GIN";`,
+    );
   }
 }

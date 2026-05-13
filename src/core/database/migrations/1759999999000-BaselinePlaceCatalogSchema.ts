@@ -108,12 +108,24 @@ export class BaselinePlaceCatalogSchema1759999999000 implements MigrationInterfa
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_place_rating_snapshot_events_event_id";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_place_categories_parent_id";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_place_categories_slug";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_place_categories_name";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_partner_slug";`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "place_rating_snapshot_events";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_place_rating_snapshot_events_event_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_place_categories_parent_id";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_place_categories_slug";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_place_categories_name";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_partner_slug";`,
+    );
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "place_rating_snapshot_events";`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "places";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "place_categories";`);
     await queryRunner.query(`DROP TABLE IF EXISTS "partners";`);

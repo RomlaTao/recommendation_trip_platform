@@ -11,7 +11,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../../../../common/decorators/current-user.decorator.js';
 import { RequirePermissions } from '../../../../../common/decorators/require-permissions.decorator.js';
 import type { JwtRequestUser } from '../../../../../common/interfaces/jwt-payload.interface.js';
@@ -44,7 +50,9 @@ export class AdminPlaceController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @RequirePermissions('places_admin:delete')
-  @ApiOperation({ summary: 'Soft-delete a place with moderation reason (admin)' })
+  @ApiOperation({
+    summary: 'Soft-delete a place with moderation reason (admin)',
+  })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async remove(
     @Param('id', new ParseUUIDPipe()) placeId: string,
@@ -108,7 +116,10 @@ export class AdminPlaceController {
     @Param('requestId', new ParseUUIDPipe()) requestId: string,
     @CurrentUser() currentUser: JwtRequestUser,
   ) {
-    return this.approvePlaceRegistrationRequestUseCase.execute(requestId, currentUser.sub);
+    return this.approvePlaceRegistrationRequestUseCase.execute(
+      requestId,
+      currentUser.sub,
+    );
   }
 
   @Patch('/requests/:requestId/reject')

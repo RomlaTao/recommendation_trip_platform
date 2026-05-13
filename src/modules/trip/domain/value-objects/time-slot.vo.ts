@@ -25,7 +25,10 @@ export class TimeSlotVO {
   }
 
   overlaps(other: TimeSlotVO): boolean {
-    return this.startMinutes < other.endMinutes && other.startMinutes < this.endMinutes;
+    return (
+      this.startMinutes < other.endMinutes &&
+      other.startMinutes < this.endMinutes
+    );
   }
 
   durationInMinutes(): number {
@@ -33,7 +36,10 @@ export class TimeSlotVO {
   }
 
   equals(other: TimeSlotVO): boolean {
-    return this.startMinutes === other.startMinutes && this.endMinutes === other.endMinutes;
+    return (
+      this.startMinutes === other.startMinutes &&
+      this.endMinutes === other.endMinutes
+    );
   }
 
   includes(time: string): boolean {

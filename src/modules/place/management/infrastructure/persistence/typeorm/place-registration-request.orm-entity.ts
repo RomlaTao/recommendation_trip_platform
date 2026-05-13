@@ -1,6 +1,5 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../../../../core/database/base.entity.js';
-import { User } from '../../../../../user/entities/user.entity.js';
 import { PlaceRegistrationRequestStatus } from '../../../enums/place-registration-request-status.enum.js';
 import { PartnerOrmEntity } from './partner.orm-entity.js';
 import { PlaceCategoryOrmEntity } from './place-category.orm-entity.js';
@@ -8,7 +7,10 @@ import { PlaceOrmEntity } from './place.orm-entity.js';
 
 @Entity('place_registration_requests')
 @Index('IDX_place_registration_requests_requester_user_id', ['requesterUserId'])
-@Index('IDX_place_registration_requests_status_created_at', ['status', 'createdAt'])
+@Index('IDX_place_registration_requests_status_created_at', [
+  'status',
+  'createdAt',
+])
 export class PlaceRegistrationRequestOrmEntity extends BaseEntity {
   @Column({ type: 'uuid' })
   requesterUserId: string;

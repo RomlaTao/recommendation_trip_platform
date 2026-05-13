@@ -10,7 +10,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../../../../common/decorators/current-user.decorator.js';
 import type { JwtRequestUser } from '../../../../../common/interfaces/jwt-payload.interface.js';
 import { JwtAuthGuard } from '../../../../../core/guards/jwt-auth.guard.js';
@@ -38,7 +44,10 @@ export class UserPlaceController {
     @CurrentUser() currentUser: JwtRequestUser,
     @Body() dto: CreatePlaceRegistrationRequestDto,
   ): Promise<{ id: string }> {
-    return this.createPlaceRegistrationRequestUseCase.execute(currentUser.sub, dto);
+    return this.createPlaceRegistrationRequestUseCase.execute(
+      currentUser.sub,
+      dto,
+    );
   }
 
   @Get()
@@ -51,7 +60,10 @@ export class UserPlaceController {
     @CurrentUser() currentUser: JwtRequestUser,
     @Query() query: ListPlaceRegistrationRequestsQueryDto,
   ) {
-    return this.listMyPlaceRegistrationRequestsUseCase.execute(currentUser.sub, query);
+    return this.listMyPlaceRegistrationRequestsUseCase.execute(
+      currentUser.sub,
+      query,
+    );
   }
 
   @Get(':id')
@@ -62,6 +74,9 @@ export class UserPlaceController {
     @CurrentUser() currentUser: JwtRequestUser,
     @Param('id', new ParseUUIDPipe()) requestId: string,
   ) {
-    return this.getMyPlaceRegistrationRequestUseCase.execute(currentUser.sub, requestId);
+    return this.getMyPlaceRegistrationRequestUseCase.execute(
+      currentUser.sub,
+      requestId,
+    );
   }
 }
