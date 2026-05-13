@@ -23,26 +23,39 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Monorepo for the trip recommendation backend and future ML services.
 
-## Project setup
+| Path | Role |
+|------|------|
+| `services/platform/` | NestJS API (main application) |
+| `services/ml-model-service/` | Placeholder for ML / inference (to be implemented) |
+| `docker-compose.yml` | Local Postgres + Redis |
+
+## Project setup (API)
+
+All `npm` commands for the API run from `services/platform`:
 
 ```bash
-$ npm install
+cd services/platform
+npm install
 ```
 
-## Compile and run the project
+## Compile and run the API
 
 ```bash
+cd services/platform
+
 # development
-$ npm run start
+npm run start
 
 # watch mode
-$ npm run start:dev
+npm run start:dev
 
 # production mode
-$ npm run start:prod
+npm run start:prod
 ```
+
+**Environment:** Copy the repository root `.env.example` to `.env` for Docker Compose variables, and copy or symlink it to `services/platform/.env` so `ConfigModule` (which loads `.env` from the process working directory) sees the same values when you run the API from `services/platform`.
 
 ## Database migrations (local)
 
@@ -51,11 +64,11 @@ Run migrations locally even when using a local database so your schema/indexes s
 ### 1) Start local services
 
 ```bash
-# postgres + redis
-$ docker compose up -d
+# From repository root — postgres + redis
+docker compose up -d
 
 # or postgres only
-$ docker compose up -d postgres
+docker compose up -d postgres
 ```
 
 ### 2) Ensure environment variables are set
@@ -73,33 +86,29 @@ Required DB vars in `.env`:
 Run all pending migrations:
 
 ```bash
-$ npm run migration:run
+cd services/platform
+npm run migration:run
 ```
 
-Useful migration commands:
+Useful migration commands (from `services/platform`):
 
 ```bash
-# list executed/pending migrations
-$ npm run migration:show
-
-# revert last migration
-$ npm run migration:revert
-
-# create an empty migration template
-$ npm run migration:create
+npm run migration:show
+npm run migration:revert
+npm run migration:create
 ```
 
 The migration CLI uses a dedicated CommonJS datasource (build step runs automatically, migrations run from `dist`):
 
-- `src/core/database/typeorm.datasource.cjs`
+- `services/platform/src/core/database/typeorm.datasource.cjs`
 
 Source datasource file:
 
-- `src/core/database/typeorm.datasource.ts`
+- `services/platform/src/core/database/typeorm.datasource.ts`
 
 Reference migration file:
 
-- `src/core/database/migrations/1760000002000-OptimizePlaceCatalogSearchIndexes.ts`
+- `services/platform/src/core/database/migrations/1760000002000-OptimizePlaceCatalogSearchIndexes.ts`
 
 ### 4) Verify migration results
 
@@ -121,14 +130,11 @@ ORDER BY indexname;
 ## Run tests
 
 ```bash
-# unit tests
-$ npm run test
+cd services/platform
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run test
+npm run test:e2e
+npm run test:cov
 ```
 
 ## Deployment
