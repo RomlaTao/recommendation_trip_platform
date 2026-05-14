@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -9,6 +10,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import settings
+from app.infra.projection_schema_ensure import ensure_place_projection_location_geography
 from app.infra.projection_seed import run_projection_csv_seed
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,10 @@ def _ping_ml_database() -> None:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Startup: optional ML DB connectivity check; extend with RabbitMQ consumer later."""
+    """Startup: ML DB ping, CSV seed, RabbitMQ place-projection consumer (optional)."""
+    stop = asyncio.Event()
+    consumer_task: asyncio.Task[None] | None = None
+
     if settings.ml_db_database:
         try:
             await asyncio.to_thread(_ping_ml_database)
@@ -36,10 +41,31 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
                 settings.ml_db_database,
                 settings.ml_db_host,
             )
+            await asyncio.to_thread(ensure_place_projection_location_geography)
             await asyncio.to_thread(run_projection_csv_seed)
         except SQLAlchemyError as exc:
             logger.warning(
                 "ML database not reachable; API stays up: %s",
                 exc,
             )
+
+    if (
+        settings.place_projection_consumer_enabled
+        and settings.rabbitmq_host.strip()
+        and settings.ml_db_database
+    ):
+        from app.messaging.place_projection_consumer import (
+            run_place_projection_consumer,
+        )
+
+        consumer_task = asyncio.create_task(
+            run_place_projection_consumer(stop),
+            name="place_projection_consumer",
+        )
+
     yield
+
+    stop.set()
+    if consumer_task:
+        with contextlib.suppress(asyncio.CancelledError):
+            await consumer_task

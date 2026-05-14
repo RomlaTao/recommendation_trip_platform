@@ -95,6 +95,10 @@ services:
       PLATFORM_DB_PORT: '5432'
       QUEUE_REDIS_HOST: redis
       QUEUE_REDIS_PORT: '6379'
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: '5672'
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
     volumes:
       - ./dataset:/app/dataset:ro
     depends_on:
@@ -102,6 +106,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -141,13 +147,23 @@ services:
       RABBITMQ_PORT: '5672'
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
-    volumes:
+      PLACE_ML_RABBITMQ_EXCHANGE: ${PLACE_ML_RABBITMQ_EXCHANGE:-place.events}
+      PLACE_ML_RABBITMQ_ROUTING_KEY: ${PLACE_ML_RABBITMQ_ROUTING_KEY:-place.projection.v1}
+      PLACE_PROJECTION_CONSUMER_ENABLED: ${PLACE_PROJECTION_CONSUMER_ENABLED:-true}
+      ML_PROJECTION_SPATIAL_MODE: ${ML_PROJECTION_SPATIAL_MODE:-postgis}
+      ML_INFERENCE_CACHE_ENABLED: ${ML_INFERENCE_CACHE_ENABLED:-true}
+      ML_INFERENCE_REDIS_HOST: redis
+      ML_INFERENCE_REDIS_PORT: '6379'
+      ML_INFERENCE_REDIS_PASSWORD: ${QUEUE_REDIS_PASSWORD:-}
+      ML_INFERENCE_CACHE_TTL_SECONDS: ${ML_INFERENCE_CACHE_TTL_SECONDS:-900}
       - ./dataset:/app/dataset:ro
     depends_on:
       postgres-ml:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   platform_postgres_data:

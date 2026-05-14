@@ -75,7 +75,10 @@ ml-model-service/
 │   │       └── model_v1_final.pkl    # Trọng số (có thể chuyển sang artifact store sau)
 │   │
 │   ├── infra/                         # [Infrastructure]
-│   │   ├── redis_client.py           # Tùy chọn
+│   │   ├── redis_client.py           # Redis sync client (inference cache)
+│   │   ├── inference_cache.py        # Chuẩn hóa payload + key cache
+│   │   ├── projection_schema_ensure.py # DDL PostGIS geography (idempotent startup)
+│   │   ├── projection_candidates.py # Đọc projection cho inference (§6)
 │   │   ├── db/                       # Session, repository cho DB ML
 │   │   ├── rabbitmq.py
 │   │   └── grpc_channel.py           # Client tới platform nếu cần
@@ -115,8 +118,8 @@ Cấu trúc JSON Payload từ Platform gửi lên ML-Model-Service
       "longitude": 107.0843
     },
     "draft_route_ids": [
-      "loc_001",
-      "loc_045"
+      "550e8400-e29b-41d4-a716-446655440001",
+      "550e8400-e29b-41d4-a716-446655440045"
     ]
   },
   "constraints": {
@@ -133,12 +136,12 @@ Cấu trúc JSON Payload từ ML-Model-Service trả về Platform
 {
   "recommendations": [
     {
-      "location_id": "loc_089",
+      "location_id": "550e8400-e29b-41d4-a716-446655440089",
       "score": 0.95,
       "distance_km": 1.2
     },
     {
-      "location_id": "loc_102",
+      "location_id": "550e8400-e29b-41d4-a716-446655440102",
       "score": 0.88,
       "distance_km": 3.5
     }
@@ -153,11 +156,13 @@ Cấu trúc JSON Payload từ ML-Model-Service trả về Platform
 
 ---
 
-## 6. Hiện thực mock (khung dự án)
+## 6. Hiện thực HTTP inference (MVP)
 
 - **HTTP:** `POST /api/v1/itinerary/recommendations` — body/response khớp mục §5 (Pydantic).
-- **Ranking mock:** tín hiệu `popular = rating × review_count`, `distance_km` (Haversine), `tag_similar` (Jaccard giữa `category_filter` và tag địa điểm; nếu không lọc category thì hệ số trung tính). Trọng số tổ hợp cố định trong `app/ml_core/models/ranking_model.py`.
-- **Dữ liệu:** danh sách địa điểm giả lập trong bộ nhớ (`recommendation_service`) cho đến khi RabbitMQ + DB ML được nối.
+- **Nguồn candidate:** đọc `place_features_projection` trên **Postgres ML** (chỉ `status = 'APPROVED'`); join `category_projection` + khóa trong `features` (JSONB) để tag phục vụ `category_filter`. Mặc định **`ML_PROJECTION_SPATIAL_MODE=postgis`**: cột generated **`location geography(Point,4326)`** + index **GiST**, lọc **`ST_DWithin`** (mét) và **`ST_Distance`** → `distance_km`. Fallback tự động sang **bbox + Haversine** trong Python nếu truy vấn PostGIS lỗi; có thể ép **`ML_PROJECTION_SPATIAL_MODE=bbox`**. DDL áp dụng lúc startup (`projection_schema_ensure`) và file init `docker/postgres/ml-init/02-place-projection-location-geog.sql` cho volume mới.
+- **Cache:** Redis (tuỳ chọn) — toàn bộ JSON response `ItineraryRecommendationResponse`, key SHA-256 từ payload đã chuẩn hóa (làm tròn tọa độ, sort list, gồm `model_version` ranker), TTL `ML_INFERENCE_CACHE_TTL_SECONDS`. Trong `docker-compose`, ML service `depends_on` **redis** và bật cache mặc định.
+- **Loại trùng:** các `place_id` trong `draft_route_ids` không trả về trong `recommendations`; `location_id` trong response = **UUID** (`place_id`).
+- **Ranking:** vẫn dùng **`MockRankingModel`** (`popular = rating × review_count`, `distance_km`, `tag_similarity`); thay artifact thật ở Phần 4.
 
 ### Chạy local
 
@@ -187,7 +192,7 @@ docker compose up -d postgres-platform postgres-ml redis rabbitmq ml-model-servi
 # Platform DB: localhost:5432  |  ML DB: localhost:5433  |  ML API: http://127.0.0.1:8001/docs
 # Hai Postgres độc lập (`postgres-platform`, `postgres-ml`); ML dùng init `docker/postgres/ml-init/`.
 # Compose mount `./dataset` → `/app/dataset`; khi `ML_SEED_ON_START=true` (mặc định), lúc start ML upsert CSV vào `place_features_projection` và `category_projection`.
-# Trong compose: ML_DB_HOST=postgres-ml, RABBITMQ_HOST=rabbitmq; user/pass lấy từ root `.env` (ML_DB_* / PLATFORM_DB_*).
+# Compose: ML dùng redis cho inference cache (ML_INFERENCE_*); seed CSV như trên.
 ```
 
 ---
@@ -200,8 +205,8 @@ Kế hoạch dưới đây **khớp với mục §5 (contract JSON)**, **§6 (HT
 
 | Giai đoạn | Inference (Platform → ML) | Ghi chú |
 |-----------|---------------------------|---------|
-| **1** | **HTTP** — `POST /api/v1/itinerary/recommendations` (§6) | Giữ nguyên route; body/response map 1-1 với Pydantic `ItineraryRecommendationRequest` / `ItineraryRecommendationResponse`. |
-| **2** (tùy chọn) | **gRPC** song song hoặc thay HTTP | Khi cần contract `.proto` chặt / latency thấp hơn; platform gọi client gRPC nội bộ. |
+| **1** | **HTTP** — `POST /api/v1/itinerary/recommendations` (§6) | **DONE.** Giữ nguyên route; body/response map 1-1 với Pydantic `ItineraryRecommendationRequest` / `ItineraryRecommendationResponse`. |
+| **2** (tùy chọn) | **gRPC** song song hoặc thay HTTP | Chưa làm. Khi cần contract `.proto` chặt / latency thấp hơn; platform gọi client gRPC nội bộ. |
 
 **Đồng bộ dữ liệu (eventual consistency)** luôn qua **RabbitMQ** như §2; ML **không** đọc DB platform cho nghiệp vụ ranking, chỉ đọc **DB ML (projection)** sau Phần 2.
 
@@ -213,6 +218,8 @@ Kế hoạch dưới đây **khớp với mục §5 (contract JSON)**, **§6 (HT
 ---
 
 ### Phần 1 — Cầu nối dữ liệu (Platform `services/platform` → RabbitMQ)
+
+**Trạng thái: DONE.**
 
 **Mục tiêu:** đẩy thay đổi Place (và tín hiệu phục vụ ML) **chủ động** từ platform; ML không gọi ngược catalog để “bơm” toàn bộ catalogue.
 
@@ -238,6 +245,8 @@ Projection ML cần bám các thay đổi có ý nghĩa, ví dụ:
 
 ### Phần 2 — Đồng bộ & lưu trữ tại `ml-model-service`
 
+**Trạng thái: DONE.**
+
 **Mục tiêu:** consumer Python xây **projection** trên **PostgreSQL riêng** của ML (migration nên đặt dưới `app/infra/db/`, ví dụ **Alembic** — khớp §3).
 
 #### 2.1 Bảng gợi ý: `place_features_projection`
@@ -254,6 +263,8 @@ Projection ML cần bám các thay đổi có ý nghĩa, ví dụ:
 
 ### Phần 3 — Inference engine (HTTP trước; cache tùy chọn)
 
+**Trạng thái: DONE** (đọc projection + mock ranker + Redis cache + PostGIS radius).
+
 #### 3.1 Endpoint và schema
 
 - **Giữ endpoint §6:** `POST /api/v1/itinerary/recommendations`.
@@ -263,22 +274,21 @@ Projection ML cần bám các thay đổi có ý nghĩa, ví dụ:
   - `constraints` ↔ `radius_km`, `top_k`, `category_filter`  
   Mọi mở rộng (time window, tag ưu tiên) = **phiên bản contract** hoặc field optional có version.
 
-#### 3.2 Redis (optional, sau khi DB projection ổn định)
+#### 3.2 Redis (HTTP inference cache)
 
-- **Cache key:** nên **chuẩn hóa** payload trước khi hash (ví dụ làm tròn tọa độ theo lưới, sắp xếp key JSON, bỏ field không ảnh hưởng ranking) để tăng hit rate; tránh hash thô toàn bộ JSON nếu client gửi thứ tự field khác nhau.
-- **TTL** (ví dụ 10–30 phút): cân nhắc **độ “fresh”** — sau khi có event place mới, kết quả cache có thể trễ tối đa một TTL trừ khi có **invalidation** theo `event_id` / `place_id` (nâng cao).
+- **Trạng thái: DONE** — key = `ml_inference_cache_key_prefix` + SHA-256(JSON chuẩn hóa): `model_version` ranker, `user_id`, `region_id`, `current_time`, lat/lon (5 chữ số thập phân), `draft_route_ids` / `category_filter` đã sort + lowercase, `radius_km`, `top_k`.
+- **TTL:** `ML_INFERENCE_CACHE_TTL_SECONDS` (mặc định 900). Không invalidation theo `place_id` trong MVP (dữ liệu có thể trễ tối đa một TTL).
 
 #### 3.3 Lọc candidate từ projection
 
-- Query `place_features_projection` theo **bán kính** quanh `trip_context.last_location` và `constraints`.
-- **MVP:** lọc bằng **Haversine** trong SQL hoặc trong app (đủ cho khối lượng vừa).
-- **Nâng cao:** **PostGIS** + index không gian khi dữ liệu và truy vấn tăng (bật extension, vận hành rõ ràng).
+- **Trạng thái: DONE** — PostGIS **`ST_DWithin`** trên geography (mét) + khoảng cách **`ST_Distance` / 1000**; fallback bbox + Haversine khi cần.
+- **Nâng cao sau:** invalidation cache theo event, tuning grid làm tròn tọa độ theo nghiệp vụ.
 
 ---
 
 ### Phần 4 — Artifact mô hình thật (`ml_core`)
 
-- Thay **`MockRankingModel`** / mock catalogue in-memory bằng pipeline **feature (request + projection) → model → score → top_k**.
+- Thay **`MockRankingModel`** bằng pipeline **feature (request + projection) → model → score → top_k** (catalogue đã lấy từ projection, không còn mock in-memory).
 - **`lifespan`:** với artifact **nhỏ** (pickle nhẹ): preload một lần; với **ONNX / Torch lớn**: cân nhắc **lazy load**, worker riêng, hoặc mmap — tránh chặn startup API quá lâu.
 - **`metadata.model_version`** (§5) phản ánh version artifact thật.
 
@@ -294,9 +304,9 @@ Projection ML cần bám các thay đổi có ý nghĩa, ví dụ:
 
 ### Thứ tự triển khai gợi ý (tóm tắt)
 
-1. Outbox + relay + RabbitMQ (Phần 1) — đủ loại event cho projection.  
-2. DB ML + consumer + UPSERT (Phần 2).  
-3. Nối inference HTTP đọc projection, bỏ mock in-memory (Phần 3).  
-4. Redis cache (tùy chọn) và tinh chỉnh query (Haversine → PostGIS nếu cần).  
+1. **DONE** — Outbox + relay + RabbitMQ (Phần 1) — đủ loại event cho projection.  
+2. **DONE** — DB ML + consumer + UPSERT (Phần 2).  
+3. **DONE** — Nối inference HTTP đọc projection, bỏ catalogue mock in-memory (Phần 3).  
+4. **DONE** — Redis cache inference và PostGIS + GiST cho truy vấn bán kính (fallback bbox).  
 5. Thay mock ranker bằng artifact thật (Phần 4).  
 6. gRPC inference (bảng lộ trình đầu §7) và hardening platform (Phần 5) song song hoặc sau bước 3 tùy ưu tiên.

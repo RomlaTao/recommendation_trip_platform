@@ -11,7 +11,7 @@ router = APIRouter(prefix="/itinerary", tags=["itinerary"])
 @router.post(
     "/recommendations",
     response_model=ItineraryRecommendationResponse,
-    summary="Rank place candidates (mock engine)",
+    summary="Rank place candidates (projection + mock ranker)",
 )
 def post_itinerary_recommendations(
     body: ItineraryRecommendationRequest,

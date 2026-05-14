@@ -37,6 +37,7 @@ import { GetMyPlaceRegistrationRequestUseCase } from './application/use-cases/ge
 import { ListPlaceRegistrationRequestsForAdminUseCase } from './application/use-cases/list-place-registration-requests-for-admin.use-case.js';
 import { ApprovePlaceRegistrationRequestUseCase } from './application/use-cases/approve-place-registration-request.use-case.js';
 import { RejectPlaceRegistrationRequestUseCase } from './application/use-cases/reject-place-registration-request.use-case.js';
+import { PlaceMlMessagingModule } from '../messaging/place-ml-messaging.module.js';
 
 /**
  * Place Management BC — owns persistence for Partner, PlaceCategory, Place.
@@ -45,6 +46,7 @@ import { RejectPlaceRegistrationRequestUseCase } from './application/use-cases/r
 @Module({
   imports: [
     NotificationModule,
+    PlaceMlMessagingModule,
     TypeOrmModule.forFeature([
       PartnerOrmEntity,
       PlaceCategoryOrmEntity,
