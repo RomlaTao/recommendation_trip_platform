@@ -1,27 +1,52 @@
-version: '3.8'
-
 services:
-  postgres:
+  postgres-platform:
     image: postgis/postgis:16-3.4
-    container_name: ${DB_DATABASE}
+    container_name: postgres_platform
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${PLATFORM_DB_USERNAME}
+      POSTGRES_PASSWORD: ${PLATFORM_DB_PASSWORD}
+      POSTGRES_DB: ${PLATFORM_DB_DATABASE}
     ports:
-      - '${DB_PORT}:5432'
+      - '${PLATFORM_DB_PORT:-5432}:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - platform_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}']
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${PLATFORM_DB_USERNAME} -d ${PLATFORM_DB_DATABASE}',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-ml:
+    image: postgis/postgis:16-3.4
+    container_name: postgres_ml
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${ML_DB_USERNAME}
+      POSTGRES_PASSWORD: ${ML_DB_PASSWORD}
+      POSTGRES_DB: ${ML_DB_DATABASE}
+    ports:
+      - '${ML_DB_PORT:-5433}:5432'
+    volumes:
+      - ml_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/ml-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${ML_DB_USERNAME} -d ${ML_DB_DATABASE}',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: recommendation_trip_redis
+    container_name: redis
     restart: unless-stopped
     ports:
       - '${QUEUE_REDIS_PORT}:6379'
@@ -35,6 +60,99 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:4.0-management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - '${RABBITMQ_PORT:-5672}:5672'
+      - '${RABBITMQ_MANAGEMENT_PORT:-15672}:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  platform:
+    build:
+      context: ./services/platform
+      dockerfile: Dockerfile
+    container_name: platform_service
+    restart: unless-stopped
+    ports:
+      - '${PORT:-3000}:3000'
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_PORT: '5432'
+      QUEUE_REDIS_HOST: redis
+      QUEUE_REDIS_PORT: '6379'
+    volumes:
+      - ./dataset:/app/dataset:ro
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://127.0.0.1:3000/api/v1/',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  ml-model-service:
+    build:
+      context: ./services/ml-model-service
+      dockerfile: Dockerfile
+    container_name: ml_model_service
+    restart: unless-stopped
+    ports:
+      - '${ML_SERVICE_PORT:-8001}:8001'
+    env_file:
+      - .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: '8001'
+      DEBUG: 'false'
+      ML_DB_HOST: postgres-ml
+      ML_DB_PORT: '5432'
+      ML_DB_USERNAME: ${ML_DB_USERNAME}
+      ML_DB_PASSWORD: ${ML_DB_PASSWORD}
+      ML_DB_DATABASE: ${ML_DB_DATABASE}
+      ML_SEED_ON_START: ${ML_SEED_ON_START:-true}
+      PLACE_CSV_PATH: ${PLACE_CSV_PATH:-dataset/places.csv}
+      CATEGORY_FOR_PLACES_CSV_PATH: ${CATEGORY_FOR_PLACES_CSV_PATH:-dataset/categories.csv}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: '5672'
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - ./dataset:/app/dataset:ro
+    depends_on:
+      postgres-ml:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
-  postgres_data:
+  platform_postgres_data:
+    driver: local
+  ml_postgres_data:
+    driver: local
+  rabbitmq_data:
     driver: local

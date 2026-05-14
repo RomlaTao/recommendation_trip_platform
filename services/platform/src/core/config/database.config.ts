@@ -3,14 +3,9 @@ import { registerAs } from '@nestjs/config';
 /**
  * Typed config namespace: 'database'
  *
- * Design rationale:
- * - `registerAs` scopes these values under the 'database' key, enabling
- *   strongly-typed injection via ConfigService.get<DatabaseConfig>('database').
- * - `synchronize` is intentionally limited to non-production environments.
- *   In production, schema changes must go through explicit TypeORM migrations
- *   to avoid accidental data loss.
- * - `autoLoadEntities: true` means modules only need to pass their entities
- *   to TypeOrmModule.forFeature() — no manual registration in this config.
+ * Environment variables (semantic):
+ * - `PLATFORM_DB_*` — NestJS / TypeORM connection to the **platform** database.
+ * Legacy `DB_*` is still read as fallback when `PLATFORM_DB_*` is unset.
  */
 export interface DatabaseConfig {
   host: string;
@@ -23,18 +18,33 @@ export interface DatabaseConfig {
   logging: boolean;
 }
 
+function firstEnv(keys: string[]): string | undefined {
+  for (const key of keys) {
+    const v = process.env[key];
+    if (v !== undefined && v !== '') return v;
+  }
+  return undefined;
+}
+
 export default registerAs(
   'database',
   (): DatabaseConfig => ({
-    host: process.env.DB_HOST ?? 'localhost',
-    port: parseInt(process.env.DB_PORT ?? '5432', 10),
-    username: process.env.DB_USERNAME ?? 'postgres',
-    password: process.env.DB_PASSWORD ?? 'postgres',
-    database: process.env.DB_DATABASE ?? 'recommendation_trip_db',
+    host: firstEnv(['PLATFORM_DB_HOST', 'DB_HOST']) ?? 'localhost',
+    port: parseInt(
+      firstEnv(['PLATFORM_DB_PORT', 'DB_PORT']) ?? '5432',
+      10,
+    ),
+    username:
+      firstEnv(['PLATFORM_DB_USERNAME', 'DB_USERNAME']) ?? 'postgres',
+    password:
+      firstEnv(['PLATFORM_DB_PASSWORD', 'DB_PASSWORD']) ?? 'postgres',
+    database:
+      firstEnv(['PLATFORM_DB_DATABASE', 'DB_DATABASE']) ??
+      'recommendation_trip_db',
     autoLoadEntities: true,
-    // Only auto-sync schema in development; use migrations in staging/prod
     synchronize: process.env.NODE_ENV !== 'production',
-    // Disable SQL query logs by default; set DB_LOGGING=true to enable.
-    logging: process.env.DB_LOGGING === 'true',
+    logging:
+      firstEnv(['PLATFORM_DB_LOGGING', 'DB_LOGGING']) === 'true' ||
+      process.env.DB_LOGGING === 'true',
   }),
 );
