@@ -1,6 +1,8 @@
 # compiled output
 dist/
 node_modules/
+.venv/
+venv/
 build/
 
 # Logs
@@ -70,3 +72,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 docs.md
 ROADMAP.md
 dataset
+
+# Python (ml-model-service and tooling)
+__pycache__/
+*.py[cod]
+*$py.class
