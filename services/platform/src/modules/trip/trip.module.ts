@@ -29,6 +29,12 @@ import { TypeormTripRepository } from './infrastructure/persistence/repositories
 import { TripDayOrmEntity } from './infrastructure/persistence/typeorm/trip-day.orm-entity.js';
 import { TripItemOrmEntity } from './infrastructure/persistence/typeorm/trip-item.orm-entity.js';
 import { TripOrmEntity } from './infrastructure/persistence/typeorm/trip.orm-entity.js';
+import { DestinationOrmEntity } from '../place/management/infrastructure/persistence/typeorm/destination.orm-entity.js';
+import { PlaceOrmEntity } from '../place/management/infrastructure/persistence/typeorm/place.orm-entity.js';
+import { TripPlaceDestinationValidator } from './application/services/trip-place-destination.validator.js';
+import { TripRouteOverviewService } from './application/services/trip-route-overview.service.js';
+import { RebuildTripRouteOverviewHandler } from './application/commands/handles/rebuild-trip-route-overview.handler.js';
+import { RebuildTripRouteOverviewHandlerImpl } from './application/commands/impls/rebuild-trip-route-overview.handler.impl.js';
 
 @Module({
   imports: [
@@ -36,11 +42,15 @@ import { TripOrmEntity } from './infrastructure/persistence/typeorm/trip.orm-ent
       TripOrmEntity,
       TripDayOrmEntity,
       TripItemOrmEntity,
+      DestinationOrmEntity,
+      PlaceOrmEntity,
     ]),
   ],
   controllers: [TripController],
   providers: [
     TripMapper,
+    TripPlaceDestinationValidator,
+    TripRouteOverviewService,
     {
       provide: CreateDraftTripHandler,
       useClass: CreateDraftTripHandlerImpl,
@@ -80,6 +90,10 @@ import { TripOrmEntity } from './infrastructure/persistence/typeorm/trip.orm-ent
     {
       provide: RemoveTripItemHandler,
       useClass: RemoveTripItemHandlerImpl,
+    },
+    {
+      provide: RebuildTripRouteOverviewHandler,
+      useClass: RebuildTripRouteOverviewHandlerImpl,
     },
     {
       provide: TRIP_REPOSITORY,

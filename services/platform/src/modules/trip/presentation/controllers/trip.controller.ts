@@ -38,11 +38,15 @@ import { RemoveTripItemHandler } from '../../application/commands/handles/remove
 import { RescheduleTripItemHandler } from '../../application/commands/handles/reschedule-trip-item.handler.js';
 import { UpdateTripDayHandler } from '../../application/commands/handles/update-trip-day.handler.js';
 import { UpdateTripItemHandler } from '../../application/commands/handles/update-trip-item.handler.js';
+import { RebuildTripRouteOverviewHandler } from '../../application/commands/handles/rebuild-trip-route-overview.handler.js';
+import { TripRouteOverviewService } from '../../application/services/trip-route-overview.service.js';
+import type { TripRouteOverviewModel } from '../../application/models/trip-route-overview.model.js';
 import { AddTripDayDto } from '../dtos/add-trip-day.dto.js';
 import { AddTripItemDto } from '../dtos/add-trip-item.dto.js';
 import { CreateTripDto } from '../dtos/create-trip.dto.js';
 import { RescheduleTripItemDto } from '../dtos/reschedule-trip-item.dto.js';
 import { TripResponseDto } from '../dtos/trip-response.dto.js';
+import { TripRouteOverviewDto } from '../dtos/trip-route-overview.dto.js';
 import { UpdateTripDayDto } from '../dtos/update-trip-day.dto.js';
 import { UpdateTripItemDto } from '../dtos/update-trip-item.dto.js';
 
@@ -63,6 +67,8 @@ export class TripController {
     private readonly updateTripItemHandler: UpdateTripItemHandler,
     private readonly rescheduleTripItemHandler: RescheduleTripItemHandler,
     private readonly removeTripItemHandler: RemoveTripItemHandler,
+    private readonly rebuildTripRouteOverviewHandler: RebuildTripRouteOverviewHandler,
+    private readonly tripRouteOverviewService: TripRouteOverviewService,
   ) {}
 
   @Post()
@@ -75,6 +81,7 @@ export class TripController {
   ): Promise<TripResponseDto> {
     const created = await this.createDraftTripHandler.execute({
       userId: user.sub,
+      destinationId: dto.destinationId,
       title: dto.title,
       startDate: dto.startDate,
       endDate: dto.endDate,
@@ -86,7 +93,10 @@ export class TripController {
       userId: user.sub,
     });
 
-    return this.toTripResponse(detail);
+    const routeOverview = await this.tripRouteOverviewService.getStoredOverview(
+      created.id,
+    );
+    return this.toTripResponse(detail, routeOverview);
   }
 
   @Get()
@@ -103,7 +113,7 @@ export class TripController {
       limit: query.limit,
     });
 
-    return trips.map((trip) => this.toTripResponse(trip.toSnapshot()));
+    return trips.map((trip) => this.toTripResponse(trip.toSnapshot(), null));
   }
 
   @Get(':tripId')
@@ -120,7 +130,26 @@ export class TripController {
       userId: user.sub,
     });
 
-    return this.toTripResponse(trip);
+    const routeOverview = await this.tripRouteOverviewService.getStoredOverview(
+      tripId,
+    );
+    return this.toTripResponse(trip, routeOverview);
+  }
+
+  @Post(':tripId/route-overview/rebuild')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Rebuild frozen route overview snapshot for trip' })
+  @ApiParam({ name: 'tripId', format: 'uuid' })
+  @ApiOkResponse({ type: TripRouteOverviewDto })
+  async rebuildRouteOverview(
+    @CurrentUser() user: JwtPayload,
+    @Param('tripId', new ParseUUIDPipe()) tripId: string,
+  ): Promise<TripRouteOverviewDto> {
+    const overview = await this.rebuildTripRouteOverviewHandler.execute({
+      tripId,
+      userId: user.sub,
+    });
+    return this.toRouteOverviewDto(overview);
   }
 
   @Post(':tripId/days')
@@ -276,9 +305,31 @@ export class TripController {
     });
   }
 
-  private toTripResponse(snapshot: TripAggregateSnapshot): TripResponseDto {
+  private toRouteOverviewDto(
+    overview: TripRouteOverviewModel,
+  ): TripRouteOverviewDto {
+    return {
+      generatedAt: overview.generatedAt,
+      tripVersion: overview.tripVersion,
+      waypoints: overview.waypoints.map((w) => ({
+        tripItemId: w.tripItemId,
+        placeId: w.placeId,
+        dayIndex: w.dayIndex,
+        sortOrder: w.sortOrder,
+        name: w.name,
+        lat: w.lat,
+        lng: w.lng,
+      })),
+    };
+  }
+
+  private toTripResponse(
+    snapshot: TripAggregateSnapshot,
+    routeOverview: TripRouteOverviewModel | null,
+  ): TripResponseDto {
     return {
       id: snapshot.id,
+      destinationId: snapshot.destinationId,
       title: snapshot.title,
       status: snapshot.status,
       startDate: snapshot.dateRange.startDate.toISOString().slice(0, 10),
@@ -304,6 +355,9 @@ export class TripController {
           }),
         };
       }),
+      routeOverview: routeOverview
+        ? this.toRouteOverviewDto(routeOverview)
+        : null,
     };
   }
 }

@@ -31,6 +31,7 @@ export class TripDayOrmEntity extends BaseEntity {
 
   @OneToMany(() => TripItemOrmEntity, (item) => item.tripDay, {
     cascade: ['insert', 'update'],
+    orphanedRowAction: 'delete',
     eager: false,
   })
   items: TripItemOrmEntity[];
