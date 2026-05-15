@@ -4,6 +4,7 @@ import { BaseEntity } from '../../../../../../core/database/base.entity.js';
 import { PlaceDataSource } from '../../../enums/place-data-source.enum.js';
 import { PlaceDeletionActorRole } from '../../../enums/place-deletion-actor-role.enum.js';
 import { PlaceStatus } from '../../../enums/place-status.enum.js';
+import { DestinationOrmEntity } from './destination.orm-entity.js';
 import { PartnerOrmEntity } from './partner.orm-entity.js';
 import { PlaceCategoryOrmEntity } from './place-category.orm-entity.js';
 
@@ -92,6 +93,16 @@ export class PlaceOrmEntity extends BaseEntity {
   @ApiPropertyOptional()
   @Column({ type: 'jsonb', nullable: true })
   tagScores?: Record<string, number> | null;
+
+  @ApiPropertyOptional()
+  @Index('IDX_places_destination_id')
+  @Column({ type: 'uuid', nullable: true })
+  destinationId?: string | null;
+
+  @ApiPropertyOptional()
+  @ManyToOne(() => DestinationOrmEntity, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'destinationId' })
+  destination?: DestinationOrmEntity | null;
 
   @ApiProperty({ enum: PlaceDataSource })
   @Column({ type: 'varchar', length: 32 })

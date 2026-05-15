@@ -37,6 +37,11 @@ export class CreatePlaceDto {
   @IsUUID()
   categoryId: string;
 
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @IsOptional()
+  @IsUUID()
+  destinationId?: string | null;
+
   @ApiProperty({
     format: 'uuid',
     description: 'Partner ownership for the created place.',

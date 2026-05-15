@@ -27,6 +27,7 @@ export interface PlaceManagementSnapshot {
   lng: string;
   categoryId: string;
   partnerId: string;
+  destinationId?: string | null;
   status: PlaceManagementStatus;
   rejectionReason?: string | null;
   openingHours?: Record<string, unknown> | null;
@@ -55,6 +56,7 @@ export interface UpdatePlaceInput {
   lat?: string;
   lng?: string;
   categoryId?: string;
+  destinationId?: string | null;
   openingHours?: Record<string, unknown> | null;
   imageUrls?: string[] | null;
   thumbnailUrl?: string | null;
@@ -84,6 +86,7 @@ export class PlaceManagementAggregate {
     lng: string;
     categoryId: string;
     partnerId: string;
+    destinationId?: string | null;
     openingHours?: Record<string, unknown> | null;
     imageUrls?: string[] | null;
     thumbnailUrl?: string | null;
@@ -97,6 +100,7 @@ export class PlaceManagementAggregate {
       lng: input.lng,
       categoryId: input.categoryId,
       partnerId: input.partnerId,
+      destinationId: input.destinationId ?? null,
       status: PlaceManagementStatus.DRAFT,
       dataSource: PlaceDataSource.PARTNER_CREATED,
       openingHours: input.openingHours ?? null,
@@ -227,6 +231,10 @@ export class PlaceManagementAggregate {
     this.snapshot.lat = input.lat ?? this.snapshot.lat;
     this.snapshot.lng = input.lng ?? this.snapshot.lng;
     this.snapshot.categoryId = input.categoryId ?? this.snapshot.categoryId;
+    this.snapshot.destinationId =
+      input.destinationId === undefined
+        ? this.snapshot.destinationId
+        : input.destinationId;
     this.snapshot.openingHours =
       input.openingHours === undefined
         ? this.snapshot.openingHours
