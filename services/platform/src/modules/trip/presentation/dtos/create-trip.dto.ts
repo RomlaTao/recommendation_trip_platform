@@ -66,6 +66,10 @@ export class CreateTripDayDto {
 }
 
 export class CreateTripDto {
+  @ApiProperty({ format: 'uuid' })
+  @IsUUID()
+  destinationId: string;
+
   @ApiProperty()
   @IsString()
   @MaxLength(255)

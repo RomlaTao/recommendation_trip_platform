@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { TRIP_EVENT_BUS, TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
 import { TripAggregate } from '../../../domain/aggregates/trip.aggregate.js';
 import { TripDraftCreatedEvent } from '../../../domain/events/trip.events.js';
+import { TripPlaceDestinationValidator } from '../../services/trip-place-destination.validator.js';
 import type { TripEventBusPort } from '../../ports/trip-event-bus.port.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
 import {
@@ -19,13 +20,27 @@ export class CreateDraftTripHandlerImpl implements CreateDraftTripHandler {
     private readonly tripRepository: TripRepositoryPort,
     @Inject(TRIP_EVENT_BUS)
     private readonly eventBus: TripEventBusPort,
+    private readonly placeDestinationValidator: TripPlaceDestinationValidator,
   ) {}
 
   async execute(
     command: CreateDraftTripCommand,
   ): Promise<CreateDraftTripResult> {
+    await this.placeDestinationValidator.assertDestinationExists(
+      command.destinationId,
+    );
+
+    const placeIds = command.days.flatMap((day) =>
+      day.items.map((item) => item.placeId),
+    );
+    await this.placeDestinationValidator.assertPlacesMatchDestination(
+      placeIds,
+      command.destinationId,
+    );
+
     const trip = TripAggregate.create({
       userId: command.userId,
+      destinationId: command.destinationId,
       title: command.title,
       startDate: command.startDate,
       endDate: command.endDate,

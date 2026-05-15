@@ -18,6 +18,7 @@ export class TripMapper {
     const snapshot: TripAggregateSnapshot = {
       id: orm.id,
       userId: orm.userId,
+      destinationId: orm.destinationId,
       title: orm.title,
       status: orm.status,
       dateRange: new TripDateRangeVO(orm.startDate, orm.endDate),
@@ -36,6 +37,7 @@ export class TripMapper {
 
     orm.id = snapshot.id;
     orm.userId = snapshot.userId;
+    orm.destinationId = snapshot.destinationId;
     orm.title = snapshot.title;
     orm.status = snapshot.status;
     orm.startDate = this.toDateOnlyString(snapshot.dateRange.startDate);

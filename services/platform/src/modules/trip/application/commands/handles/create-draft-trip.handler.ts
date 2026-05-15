@@ -1,5 +1,6 @@
 export interface CreateDraftTripCommand {
   userId: string;
+  destinationId: string;
   title: string;
   startDate: string;
   endDate: string;

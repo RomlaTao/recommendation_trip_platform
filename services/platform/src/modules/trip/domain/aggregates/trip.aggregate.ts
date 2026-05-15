@@ -14,6 +14,7 @@ import { TripDateRangeVO } from '../value-objects/trip-date-range.vo.js';
 export interface TripAggregateSnapshot {
   id: string;
   userId: string;
+  destinationId: string;
   title: string;
   status: TripStatus;
   dateRange: TripDateRangeVO;
@@ -23,6 +24,7 @@ export interface TripAggregateSnapshot {
 
 export interface CreateTripAggregateInput {
   userId: string;
+  destinationId: string;
   title: string;
   startDate: string;
   endDate: string;
@@ -56,6 +58,7 @@ export class TripAggregate {
     return new TripAggregate({
       id: randomUUID(),
       userId: input.userId,
+      destinationId: input.destinationId,
       title: input.title,
       status: TripStatus.DRAFT,
       dateRange,
