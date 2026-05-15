@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+import { DataSource, IsNull, Repository, SelectQueryBuilder } from 'typeorm';
 import { PlaceStatus } from '../../../../management/enums/place-status.enum.js';
+import { DestinationOrmEntity } from '../../../../management/infrastructure/persistence/typeorm/destination.orm-entity.js';
 import { PlaceCategoryOrmEntity } from '../../../../management/infrastructure/persistence/typeorm/place-category.orm-entity.js';
 import { PlaceOrmEntity } from '../../../../management/infrastructure/persistence/typeorm/place.orm-entity.js';
 import {
+  DestinationReadModel,
   FindNearbyPlacesQuery,
   NearbyPlaceReadModel,
   PaginatedPlaceCatalogItems,
@@ -22,16 +24,35 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     private readonly placeRepository: Repository<PlaceOrmEntity>,
     @InjectRepository(PlaceCategoryOrmEntity)
     private readonly categoryRepository: Repository<PlaceCategoryOrmEntity>,
+    @InjectRepository(DestinationOrmEntity)
+    private readonly destinationRepository: Repository<DestinationOrmEntity>,
     private readonly dataSource: DataSource,
   ) {}
+
+  private applyDestinationJoin(qb: SelectQueryBuilder<PlaceOrmEntity>): void {
+    qb.leftJoin(
+      DestinationOrmEntity,
+      'd',
+      'd.id = p.destinationId AND d.deletedAt IS NULL',
+    );
+  }
+
+  private getDestinationSelectFields(): string[] {
+    return [
+      'p.destinationId AS "destinationId"',
+      'd.name AS "destinationName"',
+      'd.slug AS "destinationSlug"',
+    ];
+  }
 
   async search(query: SearchPlacesQuery): Promise<PaginatedPlaceCatalogItems> {
     const searchExpression = this.getCatalogSearchExpression();
     const ratingExpression = this.getCatalogEffectiveRatingExpression();
     const qb = this.placeRepository
       .createQueryBuilder('p')
-      .innerJoin(PlaceCategoryOrmEntity, 'c', 'c.id = p.categoryId')
-      .select([
+      .innerJoin(PlaceCategoryOrmEntity, 'c', 'c.id = p.categoryId');
+    this.applyDestinationJoin(qb);
+    qb.select([
         'p.id AS id',
         'p.name AS name',
         'p.address AS address',
@@ -40,6 +61,7 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
         'p.thumbnailUrl AS "thumbnailUrl"',
         'p.categoryId AS "categoryId"',
         'c.name AS "categoryName"',
+        ...this.getDestinationSelectFields(),
         'p.seedAverageRating AS "seedAverageRating"',
         'p.seedReviewCount AS "seedReviewCount"',
         'p.averageRating AS "averageRating"',
@@ -59,6 +81,12 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     if (query.categoryId) {
       qb.andWhere('p."categoryId" = :categoryId', {
         categoryId: query.categoryId,
+      });
+    }
+
+    if (query.destinationId) {
+      qb.andWhere('p."destinationId" = :destinationId', {
+        destinationId: query.destinationId,
       });
     }
 
@@ -98,6 +126,11 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
         categoryId: query.categoryId,
       });
     }
+    if (query.destinationId) {
+      countQb.andWhere('p."destinationId" = :destinationId', {
+        destinationId: query.destinationId,
+      });
+    }
     if (query.minRating !== undefined) {
       countQb.andWhere(`${ratingExpression} >= :minRating`, {
         minRating: query.minRating,
@@ -120,8 +153,9 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
   async findById(placeId: string): Promise<PlaceCatalogDetailReadModel | null> {
     const qb = this.placeRepository
       .createQueryBuilder('p')
-      .innerJoin(PlaceCategoryOrmEntity, 'c', 'c.id = p.categoryId')
-      .select([
+      .innerJoin(PlaceCategoryOrmEntity, 'c', 'c.id = p.categoryId');
+    this.applyDestinationJoin(qb);
+    qb.select([
         'p.id AS id',
         'p.name AS name',
         'p.description AS description',
@@ -132,6 +166,7 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
         'p.thumbnailUrl AS "thumbnailUrl"',
         'p.categoryId AS "categoryId"',
         'c.name AS "categoryName"',
+        ...this.getDestinationSelectFields(),
         'p.seedAverageRating AS "seedAverageRating"',
         'p.seedReviewCount AS "seedReviewCount"',
         'p.averageRating AS "averageRating"',
@@ -147,6 +182,43 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     }
 
     return this.toDetailItem(row);
+  }
+
+  async listDestinations(): Promise<DestinationReadModel[]> {
+    const destinations = await this.destinationRepository.find({
+      where: { deletedAt: IsNull() },
+      order: { name: 'ASC' },
+    });
+
+    if (destinations.length > 0) {
+      return destinations.map((item) => ({
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+      }));
+    }
+
+    const rows = await this.placeRepository
+      .createQueryBuilder('p')
+      .innerJoin(
+        DestinationOrmEntity,
+        'd',
+        'd.id = p.destinationId AND d.deletedAt IS NULL',
+      )
+      .select(['d.id AS "id"', 'd.name AS "name"', 'd.slug AS "slug"'])
+      .where('p.destinationId IS NOT NULL')
+      .andWhere('p.deletedAt IS NULL')
+      .groupBy('d.id')
+      .addGroupBy('d.name')
+      .addGroupBy('d.slug')
+      .orderBy('d.name', 'ASC')
+      .getRawMany<{ id: string; name: string; slug: string }>();
+
+    return rows.map((item) => ({
+      id: item.id,
+      name: item.name,
+      slug: item.slug,
+    }));
   }
 
   async listCategories(): Promise<PlaceCategoryReadModel[]> {
@@ -197,6 +269,9 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
       thumbnailUrl: row.thumbnailUrl ?? null,
       categoryId: row.categoryId,
       categoryName: row.categoryName,
+      destinationId: row.destinationId ?? null,
+      destinationName: row.destinationName ?? null,
+      destinationSlug: row.destinationSlug ?? null,
       seedRating: {
         averageRating:
           row.seedAverageRating === null ? null : Number(row.seedAverageRating),
@@ -245,6 +320,19 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
     try {
       await queryRunner.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
 
+      const params: unknown[] = [
+        query.lng,
+        query.lat,
+        PlaceStatus.APPROVED,
+        query.radiusInMeters,
+      ];
+      let destinationClause = '';
+      if (query.destinationId) {
+        destinationClause = `AND p."destinationId" = $${params.length + 1}`;
+        params.push(query.destinationId);
+      }
+      params.push(query.limit);
+
       const rows = (await queryRunner.query(
         `
           SELECT
@@ -256,6 +344,9 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
             p."thumbnailUrl" AS "thumbnailUrl",
             p."categoryId" AS "categoryId",
             c."name" AS "categoryName",
+            p."destinationId" AS "destinationId",
+            d."name" AS "destinationName",
+            d."slug" AS "destinationSlug",
             p."seedAverageRating" AS "seedAverageRating",
             p."seedReviewCount" AS "seedReviewCount",
             p."averageRating" AS "averageRating",
@@ -266,6 +357,7 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
             ) AS "distanceInMeters"
           FROM "places" p
           INNER JOIN "place_categories" c ON c."id" = p."categoryId"
+          LEFT JOIN "destinations" d ON d."id" = p."destinationId" AND d."deletedAt" IS NULL
           WHERE p."status" = $3
             AND p."deletedAt" IS NULL
             AND c."deletedAt" IS NULL
@@ -274,20 +366,15 @@ export class PlaceCatalogRepository implements PlaceCatalogRepositoryPort {
               ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
               $4
             )
+            ${destinationClause}
           ORDER BY
             ST_SetSRID(ST_MakePoint(p."lng"::double precision, p."lat"::double precision), 4326)::geography
             <->
             ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography ASC,
             p."id" ASC
-          LIMIT $5
+          LIMIT $${params.length}
         `,
-        [
-          query.lng,
-          query.lat,
-          PlaceStatus.APPROVED,
-          query.radiusInMeters,
-          query.limit,
-        ],
+        params,
       )) as NearbySearchRow[];
 
       await queryRunner.commitTransaction();
@@ -310,6 +397,9 @@ interface PlaceSearchRow {
   thumbnailUrl: string | null;
   categoryId: string;
   categoryName: string;
+  destinationId: string | null;
+  destinationName: string | null;
+  destinationSlug: string | null;
   seedAverageRating: string | null;
   seedReviewCount: number | null;
   averageRating: string | null;

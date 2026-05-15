@@ -33,6 +33,15 @@ export class PlaceListItemDto {
   @ApiProperty({ example: 'Cafe' })
   categoryName: string;
 
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  destinationId: string | null;
+
+  @ApiPropertyOptional({ example: 'Vũng Tàu', nullable: true })
+  destinationName: string | null;
+
+  @ApiPropertyOptional({ example: 'vung-tau', nullable: true })
+  destinationSlug: string | null;
+
   @ApiProperty({ type: PlaceRatingBlockDto })
   communityRating: PlaceRatingBlockDto;
 
@@ -65,6 +74,17 @@ export class PlaceCategoryDto {
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   parentId: string | null;
+}
+
+export class DestinationDto {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ example: 'Vũng Tàu' })
+  name: string;
+
+  @ApiProperty({ example: 'vung-tau' })
+  slug: string;
 }
 
 export class PaginatedPlacesDto {

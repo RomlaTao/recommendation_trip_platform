@@ -10,6 +10,7 @@ import { PlaceCatalogController } from './presentation/controllers/place-catalog
 import { NearbyRateLimitGuard } from './presentation/guards/nearby-rate-limit.guard.js';
 import { PlaceRatingSnapshotConsumer } from './infrastructure/events/place-rating-snapshot.consumer.js';
 import { PlaceRatingSnapshotEventOrmEntity } from './infrastructure/persistence/typeorm/place-rating-snapshot-event.orm-entity.js';
+import { DestinationOrmEntity } from '../management/infrastructure/persistence/typeorm/destination.orm-entity.js';
 import { PlaceOrmEntity } from '../management/infrastructure/persistence/typeorm/place.orm-entity.js';
 import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.events.js';
 
@@ -18,6 +19,7 @@ import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.event
     PlaceManagementModule,
     TypeOrmModule.forFeature([
       PlaceOrmEntity,
+      DestinationOrmEntity,
       PlaceRatingSnapshotEventOrmEntity,
     ]),
     BullModule.registerQueue({

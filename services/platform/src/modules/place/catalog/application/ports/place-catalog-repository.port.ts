@@ -3,6 +3,7 @@ export type PlaceCatalogSort = 'newest' | 'rating_desc' | 'name_asc';
 export interface SearchPlacesQuery {
   q?: string;
   categoryId?: string;
+  destinationId?: string;
   minRating?: number;
   sort: PlaceCatalogSort;
   page: number;
@@ -14,6 +15,7 @@ export interface FindNearbyPlacesQuery {
   lng: number;
   radiusInMeters: number;
   limit: number;
+  destinationId?: string;
 }
 
 export interface PlaceRatingReadModel {
@@ -30,6 +32,9 @@ export interface PlaceCatalogListItemReadModel {
   thumbnailUrl: string | null;
   categoryId: string;
   categoryName: string;
+  destinationId: string | null;
+  destinationName: string | null;
+  destinationSlug: string | null;
   seedRating: PlaceRatingReadModel;
   communityRating: PlaceRatingReadModel;
 }
@@ -44,6 +49,12 @@ export interface PlaceCategoryReadModel {
   name: string;
   slug: string;
   parentId: string | null;
+}
+
+export interface DestinationReadModel {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 export interface NearbyPlaceReadModel extends PlaceCatalogListItemReadModel {
@@ -61,5 +72,6 @@ export interface PlaceCatalogRepositoryPort {
   search(query: SearchPlacesQuery): Promise<PaginatedPlaceCatalogItems>;
   findById(placeId: string): Promise<PlaceCatalogDetailReadModel | null>;
   listCategories(): Promise<PlaceCategoryReadModel[]>;
+  listDestinations(): Promise<DestinationReadModel[]>;
   findNearby(query: FindNearbyPlacesQuery): Promise<NearbyPlaceReadModel[]>;
 }
