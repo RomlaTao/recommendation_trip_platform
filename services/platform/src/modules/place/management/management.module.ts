@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DestinationOrmEntity } from './infrastructure/persistence/typeorm/destination.orm-entity.js';
 import { PartnerOrmEntity } from './infrastructure/persistence/typeorm/partner.orm-entity.js';
 import { PlaceCategoryOrmEntity } from './infrastructure/persistence/typeorm/place-category.orm-entity.js';
 import { PlaceOrmEntity } from './infrastructure/persistence/typeorm/place.orm-entity.js';
@@ -37,6 +38,7 @@ import { GetMyPlaceRegistrationRequestUseCase } from './application/use-cases/ge
 import { ListPlaceRegistrationRequestsForAdminUseCase } from './application/use-cases/list-place-registration-requests-for-admin.use-case.js';
 import { ApprovePlaceRegistrationRequestUseCase } from './application/use-cases/approve-place-registration-request.use-case.js';
 import { RejectPlaceRegistrationRequestUseCase } from './application/use-cases/reject-place-registration-request.use-case.js';
+import { ListPlacesForAdminUseCase } from './application/use-cases/list-places-for-admin.use-case.js';
 import { PlaceMlMessagingModule } from '../messaging/place-ml-messaging.module.js';
 
 /**
@@ -49,6 +51,7 @@ import { PlaceMlMessagingModule } from '../messaging/place-ml-messaging.module.j
     PlaceMlMessagingModule,
     TypeOrmModule.forFeature([
       PartnerOrmEntity,
+      DestinationOrmEntity,
       PlaceCategoryOrmEntity,
       PlaceOrmEntity,
       PlaceRegistrationRequestOrmEntity,
@@ -96,6 +99,7 @@ import { PlaceMlMessagingModule } from '../messaging/place-ml-messaging.module.j
     ListPlaceRegistrationRequestsForAdminUseCase,
     ApprovePlaceRegistrationRequestUseCase,
     RejectPlaceRegistrationRequestUseCase,
+    ListPlacesForAdminUseCase,
   ],
   exports: [TypeOrmModule, PLACE_MANAGEMENT_REPOSITORY],
 })
