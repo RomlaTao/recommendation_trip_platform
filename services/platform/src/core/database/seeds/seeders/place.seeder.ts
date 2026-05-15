@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlaceOrmEntity } from '../../../../modules/place/management/infrastructure/persistence/typeorm/place.orm-entity.js';
 import { PartnerOrmEntity } from '../../../../modules/place/management/infrastructure/persistence/typeorm/partner.orm-entity.js';
+import { DestinationOrmEntity } from '../../../../modules/place/management/infrastructure/persistence/typeorm/destination.orm-entity.js';
 import { PlaceCategoryOrmEntity } from '../../../../modules/place/management/infrastructure/persistence/typeorm/place-category.orm-entity.js';
 import { PlaceDataSource } from '../../../../modules/place/management/enums/place-data-source.enum.js';
 import { PlaceStatus } from '../../../../modules/place/management/enums/place-status.enum.js';
@@ -39,6 +40,8 @@ export class PlaceSeeder {
     private readonly partnerRepository: Repository<PartnerOrmEntity>,
     @InjectRepository(PlaceCategoryOrmEntity)
     private readonly categoryRepository: Repository<PlaceCategoryOrmEntity>,
+    @InjectRepository(DestinationOrmEntity)
+    private readonly destinationRepository: Repository<DestinationOrmEntity>,
   ) {}
 
   private async findOrCreateTarget(
@@ -88,6 +91,17 @@ export class PlaceSeeder {
         continue;
       }
 
+      const destinationId = toNullableString(row.destination_id);
+      if (destinationId) {
+        const destination = await this.destinationRepository.findOne({
+          where: { id: destinationId },
+        });
+        if (!destination) {
+          skipped += 1;
+          continue;
+        }
+      }
+
       const place =
         (await this.findOrCreateTarget(row)) ?? this.placeRepository.create();
       const wasNew = !place.id;
@@ -110,6 +124,7 @@ export class PlaceSeeder {
       place.thumbnailUrl = toNullableString(row.thumbnail);
       place.partnerId = partner.id;
       place.categoryId = category.id;
+      place.destinationId = destinationId;
       place.dataSource = PlaceDataSource.CSV_SEED;
       place.importBatchId = 'vungtau-csv-initial';
       place.deletedReason = null;

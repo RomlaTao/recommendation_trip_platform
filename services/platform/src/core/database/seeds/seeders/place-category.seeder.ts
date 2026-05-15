@@ -63,30 +63,63 @@ export class PlaceCategorySeeder {
         skipped += 1;
         continue;
       }
-      const existing = await this.categoryRepository.findOne({
+      const existingById = await this.categoryRepository.findOne({
         where: { id: row.id },
       });
-      if (!existing) {
-        await this.categoryRepository.save(
-          this.categoryRepository.create({
-            id: row.id,
-            name: row.name,
-            slug,
-          }),
-        );
-        created += 1;
+      if (existingById) {
+        if (
+          existingById.name !== row.name ||
+          existingById.slug !== slug
+        ) {
+          existingById.name = row.name;
+          existingById.slug = slug;
+          await this.categoryRepository.save(existingById);
+          updated += 1;
+        } else {
+          skipped += 1;
+        }
         continue;
       }
 
-      if (existing.name !== row.name || existing.slug !== slug) {
-        existing.name = row.name;
-        existing.slug = slug;
-        await this.categoryRepository.save(existing);
+      const existingBySlug = await this.categoryRepository.findOne({
+        where: { slug },
+      });
+      if (existingBySlug) {
+        const legacyId = existingBySlug.id;
+        await this.categoryRepository.manager.transaction(async (manager) => {
+          await manager.query(
+            `UPDATE place_categories SET slug = $1 WHERE id = $2`,
+            [`${slug}-legacy-${legacyId}`, legacyId],
+          );
+          await manager.save(
+            PlaceCategoryOrmEntity,
+            manager.create(PlaceCategoryOrmEntity, {
+              id: row.id,
+              name: row.name,
+              slug,
+            }),
+          );
+          await manager.query(
+            `UPDATE places SET "categoryId" = $1 WHERE "categoryId" = $2`,
+            [row.id, legacyId],
+          );
+          await manager.delete(PlaceCategoryOrmEntity, { id: legacyId });
+        });
+        this.logger.log(
+          `  [MIG]  Category id ${legacyId} → ${row.id} (${row.name})`,
+        );
         updated += 1;
         continue;
       }
 
-      skipped += 1;
+      await this.categoryRepository.save(
+        this.categoryRepository.create({
+          id: row.id,
+          name: row.name,
+          slug,
+        }),
+      );
+      created += 1;
     }
 
     this.logger.log(

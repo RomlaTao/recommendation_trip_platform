@@ -2,28 +2,16 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /** Read at call time so `.env` loaded by Nest `ConfigModule` is visible (not at module load). */
-function getPlaceCsvPathFromEnv(): string {
-  return process.env.PLACE_CSV_PATH ?? '';
+function getDestinationCsvPathFromEnv(): string {
+  return process.env.DESTINATION_CSV_PATH ?? '';
 }
 
-export interface PlaceCsvRow {
+export interface DestinationCsvRow {
   id: string;
+  slug: string;
   name: string;
-  address: string;
-  lat: string;
-  lng: string;
-  description: string;
-  google_place_id: string;
-  average_rating: string;
-  review_count: string;
-  category_id: string;
-  destination_id: string;
   created_at: string;
   updated_at: string;
-  tag_scores: string;
-  status: string;
-  image_urls: string;
-  thumbnail: string;
 }
 
 function parseCsv(content: string): string[][] {
@@ -71,9 +59,13 @@ function parseCsv(content: string): string[][] {
   return rows;
 }
 
-export function readPlaceCsvRows(
-  csvRelativePath = getPlaceCsvPathFromEnv(),
-): PlaceCsvRow[] {
+function normalizeText(input: string): string {
+  return input.replace(/^"+|"+$/g, '').trim();
+}
+
+export function readDestinationCsvRows(
+  csvRelativePath = getDestinationCsvPathFromEnv(),
+): DestinationCsvRow[] {
   if (!csvRelativePath) return [];
   const absPath = resolve(process.cwd(), csvRelativePath);
   const raw = readFileSync(absPath, 'utf-8').replace(/^\uFEFF/, '');
@@ -81,43 +73,22 @@ export function readPlaceCsvRows(
 
   if (parsed.length <= 1) return [];
   const [header, ...lines] = parsed;
-  const columns = header.map((h) => h.trim());
+  const columns = header.map((h) => normalizeText(h));
 
   return lines
-    .filter((line) => line.some((v) => v !== ''))
+    .filter((line) => line.some((v) => normalizeText(v) !== ''))
     .map((line) => {
       const rec: Record<string, string> = {};
       columns.forEach((name, idx) => {
-        rec[name] = line[idx] ?? '';
+        rec[name] = normalizeText(line[idx] ?? '');
       });
 
       return {
         id: rec.id ?? '',
+        slug: rec.slug ?? '',
         name: rec.name ?? '',
-        address: rec.address ?? '',
-        lat: rec.lat ?? '',
-        lng: rec.lng ?? '',
-        description: rec.description ?? '',
-        google_place_id: rec.google_place_id ?? '',
-        average_rating: rec.average_rating ?? '',
-        review_count: rec.review_count ?? '',
-        category_id: rec.category_id ?? '',
-        destination_id: rec.destination_id ?? '',
         created_at: rec.created_at ?? '',
         updated_at: rec.updated_at ?? '',
-        tag_scores: rec.tag_scores ?? '',
-        status: rec.status ?? '',
-        image_urls: rec.image_urls ?? '',
-        thumbnail: rec.thumbnail ?? '',
       };
     });
-}
-
-export function parseJsonField<T>(value: string): T | null {
-  if (!value || value.trim() === '') return null;
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return null;
-  }
 }
