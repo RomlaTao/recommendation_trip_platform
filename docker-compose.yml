@@ -88,11 +88,14 @@ services:
     ports:
       - '${PORT:-3000}:3000'
     env_file:
-      - .env
+      - services/platform/.env
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PLATFORM_DB_HOST: postgres-platform
       PLATFORM_DB_PORT: '5432'
+      PLACE_CSV_PATH: /app/dataset/placev2.csv
+      CATEGORY_FOR_PLACES_CSV_PATH: /app/dataset/categories_for_places.csv
+      DESTINATION_CSV_PATH: /app/dataset/destination.csv
       QUEUE_REDIS_HOST: redis
       QUEUE_REDIS_PORT: '6379'
       RABBITMQ_HOST: rabbitmq
@@ -156,6 +159,7 @@ services:
       ML_INFERENCE_REDIS_PORT: '6379'
       ML_INFERENCE_REDIS_PASSWORD: ${QUEUE_REDIS_PASSWORD:-}
       ML_INFERENCE_CACHE_TTL_SECONDS: ${ML_INFERENCE_CACHE_TTL_SECONDS:-900}
+    volumes:
       - ./dataset:/app/dataset:ro
     depends_on:
       postgres-ml:
