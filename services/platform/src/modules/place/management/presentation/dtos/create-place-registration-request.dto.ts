@@ -37,6 +37,11 @@ export class CreatePlaceRegistrationRequestDto {
   @IsUUID()
   categoryId: string;
 
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @IsOptional()
+  @IsUUID()
+  destinationId?: string | null;
+
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()

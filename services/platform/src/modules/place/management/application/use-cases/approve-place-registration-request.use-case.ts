@@ -63,6 +63,7 @@ export class ApprovePlaceRegistrationRequestUseCase {
         lng: request.lng,
         categoryId: request.categoryId,
         partnerId: partner.id,
+        destinationId: request.destinationId ?? null,
         imageUrls: request.imageUrls ?? null,
         thumbnailUrl: request.thumbnailUrl ?? null,
       });
