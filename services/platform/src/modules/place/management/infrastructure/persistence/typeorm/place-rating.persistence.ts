@@ -1,21 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
-import type { RabbitMqConfig } from '../../../../../core/config/rabbitmq.config.js';
-import { PlaceOrmEntity } from '../../infrastructure/persistence/typeorm/place.orm-entity.js';
-import { PlaceMlOutboxWriterService } from '../../../messaging/place-ml-outbox-writer.service.js';
-import {
-  createPlaceRatingUpdatedEvent,
-  PlaceRatingUpdatedDomainEvent,
-  PlaceReviewDomainEvent,
-} from '../../../shared/events/place-review.events.js';
-
-export interface PlaceRatingSnapshot {
-  placeId: string;
-  averageRating: string | null;
-  reviewCount: number;
-  ratingLastUpdatedAt: Date;
-}
+import type { RabbitMqConfig } from '../../../../../../core/config/rabbitmq.config.js';
+import { PlaceMlOutboxWriterService } from '../../../../messaging/place-ml-outbox-writer.service.js';
+import type {
+  PlaceRatingPersistencePort,
+  PlaceRatingSnapshot,
+} from '../../../application/ports/place-rating-persistence.port.js';
+import { PlaceOrmEntity } from './place.orm-entity.js';
 
 interface PlaceIdRow {
   id: string;
@@ -35,7 +27,7 @@ function asRatingAggregateRows(rows: unknown): RatingAggregateRow[] {
 }
 
 @Injectable()
-export class PlaceRatingUpdateService {
+export class PlaceRatingPersistence implements PlaceRatingPersistencePort {
   constructor(
     private readonly dataSource: DataSource,
     private readonly placeMlOutboxWriter: PlaceMlOutboxWriterService,
@@ -49,18 +41,8 @@ export class PlaceRatingUpdateService {
     );
   }
 
-  async applyReviewEvent(
-    event: PlaceReviewDomainEvent,
-  ): Promise<PlaceRatingUpdatedDomainEvent> {
-    const snapshot = await this.recalculateAndPersist(event.payload.placeId);
-    return createPlaceRatingUpdatedEvent({
-      ...snapshot,
-      sourceReviewEventId: event.metadata.eventId,
-    });
-  }
-
-  async reconcile(limit = 100): Promise<PlaceRatingSnapshot[]> {
-    const rawCandidates: unknown = await this.dataSource.query(
+  async findPlaceIdsNeedingReconcile(limit: number): Promise<string[]> {
+    const raw: unknown = await this.dataSource.query(
       `
       SELECT p."id"
       FROM "places" p
@@ -77,20 +59,10 @@ export class PlaceRatingUpdateService {
       `,
       [limit],
     );
-    const candidates = asPlaceIdRows(rawCandidates);
-
-    const snapshots: PlaceRatingSnapshot[] = [];
-    for (const row of candidates) {
-      const snapshot = await this.recalculateAndPersist(row.id);
-      snapshots.push(snapshot);
-    }
-
-    return snapshots;
+    return asPlaceIdRows(raw).map((row) => row.id);
   }
 
-  private async recalculateAndPersist(
-    placeId: string,
-  ): Promise<PlaceRatingSnapshot> {
+  async recalculateAndPersist(placeId: string): Promise<PlaceRatingSnapshot> {
     const rk = this.projectionRoutingKey();
     return this.dataSource.transaction(async (manager) => {
       const rawRows: unknown = await manager.query(
@@ -130,6 +102,7 @@ export class PlaceRatingUpdateService {
           snapshot.ratingLastUpdatedAt,
         ],
       );
+
       const place = await manager.findOne(PlaceOrmEntity, {
         where: { id: placeId },
         withDeleted: true,

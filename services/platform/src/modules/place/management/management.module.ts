@@ -11,8 +11,10 @@ import { UserPlaceController } from './presentation/controllers/user.controller.
 import {
   PLACE_MANAGEMENT_EVENT_BUS,
   PLACE_MANAGEMENT_REPOSITORY,
+  PLACE_RATING_PERSISTENCE,
 } from './application/management.di-tokens.js';
 import { PlaceManagementRepository } from './infrastructure/persistence/typeorm/management.repository.js';
+import { PlaceRatingPersistence } from './infrastructure/persistence/typeorm/place-rating.persistence.js';
 import { PlaceMapper } from './infrastructure/persistence/mappers/place.mapper.js';
 import { NestEventBusAdapter } from './infrastructure/events/nest-event-bus.adapter.js';
 import { UpdatePlaceUseCase } from './application/use-cases/update-place.use-case.js';
@@ -23,7 +25,8 @@ import { DeleteOwnPlaceUseCase } from './application/use-cases/delete-own-place.
 import { RestorePlaceByAdminUseCase } from './application/use-cases/restore-place-by-admin.use-case.js';
 import { RestoreOwnPlaceUseCase } from './application/use-cases/restore-own-place.use-case.js';
 import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.events.js';
-import { PlaceRatingUpdateService } from './application/services/place-rating-update.service.js';
+import { ApplyReviewToPlaceRatingUseCase } from './application/use-cases/apply-review-to-place-rating.use-case.js';
+import { ReconcilePlaceRatingsUseCase } from './application/use-cases/reconcile-place-ratings.use-case.js';
 import { BullPlaceRatingUpdatedPublisher } from './infrastructure/events/bull-place-rating-updated.publisher.js';
 import { PlaceReviewRatingConsumer } from './infrastructure/events/place-review-rating.consumer.js';
 import { PlaceRatingReconciliationScheduler } from './infrastructure/events/place-rating-reconciliation.scheduler.js';
@@ -82,6 +85,10 @@ import { PlaceMlMessagingModule } from '../messaging/place-ml-messaging.module.j
       provide: PLACE_MANAGEMENT_EVENT_BUS,
       useClass: NestEventBusAdapter,
     },
+    {
+      provide: PLACE_RATING_PERSISTENCE,
+      useClass: PlaceRatingPersistence,
+    },
     UpdatePlaceUseCase,
     SubmitPlaceUseCase,
     DeletePlaceByAdminUseCase,
@@ -89,7 +96,8 @@ import { PlaceMlMessagingModule } from '../messaging/place-ml-messaging.module.j
     RestorePlaceByAdminUseCase,
     RestoreOwnPlaceUseCase,
     GetPlaceUseCase,
-    PlaceRatingUpdateService,
+    ApplyReviewToPlaceRatingUseCase,
+    ReconcilePlaceRatingsUseCase,
     BullPlaceRatingUpdatedPublisher,
     PlaceReviewRatingConsumer,
     PlaceRatingReconciliationScheduler,
