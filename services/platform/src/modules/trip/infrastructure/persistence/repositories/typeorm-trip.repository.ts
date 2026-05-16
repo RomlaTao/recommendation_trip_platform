@@ -2,8 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
+import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
 import { TripRepositoryPort } from '../../../application/ports/trip.repository.port.js';
 import { TripAggregate } from '../../../domain/aggregates/trip.aggregate.js';
+import type { TripRouteOverviewSnapshot } from '../../../domain/read-models/trip-route-overview.snapshot.js';
+import { TripRouteOverviewBuilder } from '../../../domain/services/trip-route-overview.builder.js';
 import type { TripDayEntity } from '../../../domain/entities/trip-day.entity.js';
 import { TripMapper } from '../mappers/trip.mapper.js';
 import { TripDayOrmEntity } from '../typeorm/trip-day.orm-entity.js';
@@ -103,5 +106,31 @@ export class TypeormTripRepository implements TripRepositoryPort {
     });
 
     return ormTrips.map((trip) => this.mapper.toDomain(trip));
+  }
+
+  async findRouteOverviewByTripId(
+    tripId: string,
+  ): Promise<TripRouteOverviewSnapshot | null> {
+    const row = await this.repository.findOne({
+      where: { id: tripId },
+      select: ['id', 'routeOverview'],
+    });
+    if (!row?.routeOverview) {
+      return null;
+    }
+    return TripRouteOverviewBuilder.parseStored(row.routeOverview);
+  }
+
+  async saveRouteOverview(
+    tripId: string,
+    overview: TripRouteOverviewSnapshot,
+  ): Promise<void> {
+    const updated = await this.repository.update(
+      { id: tripId },
+      { routeOverview: overview },
+    );
+    if (!updated.affected) {
+      throw new ResourceNotFoundError('trip_not_found');
+    }
   }
 }

@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     ml_inference_redis_password: str = ""
     ml_inference_redis_db: int = 0
     ml_inference_cache_ttl_seconds: int = 900
-    ml_inference_cache_key_prefix: str = "ml:itinerary:v1"
+    ml_inference_cache_key_prefix: str = "ml:itinerary:v2"
 
 
 settings = Settings()

@@ -39,8 +39,8 @@ import { RescheduleTripItemHandler } from '../../application/commands/handles/re
 import { UpdateTripDayHandler } from '../../application/commands/handles/update-trip-day.handler.js';
 import { UpdateTripItemHandler } from '../../application/commands/handles/update-trip-item.handler.js';
 import { RebuildTripRouteOverviewHandler } from '../../application/commands/handles/rebuild-trip-route-overview.handler.js';
-import { TripRouteOverviewService } from '../../application/services/trip-route-overview.service.js';
-import type { TripRouteOverviewModel } from '../../application/models/trip-route-overview.model.js';
+import { GetTripRouteOverviewHandler } from '../../application/queries/handles/get-trip-route-overview.handler.js';
+import type { TripRouteOverviewSnapshot } from '../../domain/read-models/trip-route-overview.snapshot.js';
 import { AddTripDayDto } from '../dtos/add-trip-day.dto.js';
 import { AddTripItemDto } from '../dtos/add-trip-item.dto.js';
 import { CreateTripDto } from '../dtos/create-trip.dto.js';
@@ -68,7 +68,7 @@ export class TripController {
     private readonly rescheduleTripItemHandler: RescheduleTripItemHandler,
     private readonly removeTripItemHandler: RemoveTripItemHandler,
     private readonly rebuildTripRouteOverviewHandler: RebuildTripRouteOverviewHandler,
-    private readonly tripRouteOverviewService: TripRouteOverviewService,
+    private readonly getTripRouteOverviewHandler: GetTripRouteOverviewHandler,
   ) {}
 
   @Post()
@@ -93,9 +93,10 @@ export class TripController {
       userId: user.sub,
     });
 
-    const routeOverview = await this.tripRouteOverviewService.getStoredOverview(
-      created.id,
-    );
+    const routeOverview = await this.getTripRouteOverviewHandler.execute({
+      tripId: created.id,
+      userId: user.sub,
+    });
     return this.toTripResponse(detail, routeOverview);
   }
 
@@ -130,9 +131,10 @@ export class TripController {
       userId: user.sub,
     });
 
-    const routeOverview = await this.tripRouteOverviewService.getStoredOverview(
+    const routeOverview = await this.getTripRouteOverviewHandler.execute({
       tripId,
-    );
+      userId: user.sub,
+    });
     return this.toTripResponse(trip, routeOverview);
   }
 
@@ -306,7 +308,7 @@ export class TripController {
   }
 
   private toRouteOverviewDto(
-    overview: TripRouteOverviewModel,
+    overview: TripRouteOverviewSnapshot,
   ): TripRouteOverviewDto {
     return {
       generatedAt: overview.generatedAt,
@@ -325,7 +327,7 @@ export class TripController {
 
   private toTripResponse(
     snapshot: TripAggregateSnapshot,
-    routeOverview: TripRouteOverviewModel | null,
+    routeOverview: TripRouteOverviewSnapshot | null,
   ): TripResponseDto {
     return {
       id: snapshot.id,
