@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TripStatus } from '../../domain/enums/trip-status.enum.js';
+import { TripRouteOverviewDto } from './trip-route-overview.dto.js';
 
 export class TripItemResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -42,6 +43,9 @@ export class TripResponseDto {
   @ApiProperty({ format: 'uuid' })
   id: string;
 
+  @ApiProperty({ format: 'uuid' })
+  destinationId: string;
+
   @ApiProperty()
   title: string;
 
@@ -59,4 +63,7 @@ export class TripResponseDto {
 
   @ApiProperty({ type: [TripDayResponseDto] })
   days: TripDayResponseDto[];
+
+  @ApiPropertyOptional({ type: TripRouteOverviewDto, nullable: true })
+  routeOverview?: TripRouteOverviewDto | null;
 }

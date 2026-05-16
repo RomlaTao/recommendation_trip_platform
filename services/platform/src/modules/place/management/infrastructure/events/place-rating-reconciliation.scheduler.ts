@@ -6,7 +6,7 @@ import {
   PLACE_RATING_SNAPSHOT_QUEUE,
   RECONCILE_RATING_SNAPSHOT_JOB,
 } from '../../../shared/events/place-review.events.js';
-import { PlaceRatingUpdateService } from '../../application/services/place-rating-update.service.js';
+import { ReconcilePlaceRatingsUseCase } from '../../application/use-cases/reconcile-place-ratings.use-case.js';
 import { BullPlaceRatingUpdatedPublisher } from './bull-place-rating-updated.publisher.js';
 import { createPlaceRatingUpdatedEvent } from '../../../shared/events/place-review.events.js';
 
@@ -18,7 +18,7 @@ export class PlaceRatingReconciliationScheduler implements OnModuleInit {
   constructor(
     @InjectQueue(PLACE_RATING_SNAPSHOT_QUEUE)
     private readonly queue: Queue,
-    private readonly placeRatingUpdateService: PlaceRatingUpdateService,
+    private readonly reconcilePlaceRatings: ReconcilePlaceRatingsUseCase,
     private readonly placeRatingUpdatedPublisher: BullPlaceRatingUpdatedPublisher,
   ) {}
 
@@ -38,7 +38,7 @@ export class PlaceRatingReconciliationScheduler implements OnModuleInit {
   @Process(RECONCILE_RATING_SNAPSHOT_JOB)
   async handleReconcile(_job: Job): Promise<void> {
     void _job;
-    const snapshots = await this.placeRatingUpdateService.reconcile(100);
+    const snapshots = await this.reconcilePlaceRatings.execute(100);
     for (const snapshot of snapshots) {
       await this.placeRatingUpdatedPublisher.publish(
         createPlaceRatingUpdatedEvent(snapshot),

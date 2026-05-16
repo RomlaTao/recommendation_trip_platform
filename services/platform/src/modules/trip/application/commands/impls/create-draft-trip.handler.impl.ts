@@ -1,10 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
-import { TRIP_EVENT_BUS, TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
+import {
+  TRIP_EVENT_BUS,
+  TRIP_PLACE_READ_PORT,
+  TRIP_REPOSITORY,
+} from '../../../trip.di-tokens.js';
 import { TripAggregate } from '../../../domain/aggregates/trip.aggregate.js';
 import { TripDraftCreatedEvent } from '../../../domain/events/trip.events.js';
 import type { TripEventBusPort } from '../../ports/trip-event-bus.port.js';
+import type { TripPlaceReadPort } from '../../ports/trip-place-read.port.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
 import {
   CreateDraftTripCommand,
@@ -19,13 +24,26 @@ export class CreateDraftTripHandlerImpl implements CreateDraftTripHandler {
     private readonly tripRepository: TripRepositoryPort,
     @Inject(TRIP_EVENT_BUS)
     private readonly eventBus: TripEventBusPort,
+    @Inject(TRIP_PLACE_READ_PORT)
+    private readonly tripPlaceRead: TripPlaceReadPort,
   ) {}
 
   async execute(
     command: CreateDraftTripCommand,
   ): Promise<CreateDraftTripResult> {
+    await this.tripPlaceRead.assertDestinationExists(command.destinationId);
+
+    const placeIds = command.days.flatMap((day) =>
+      day.items.map((item) => item.placeId),
+    );
+    await this.tripPlaceRead.assertPlacesMatchDestination(
+      placeIds,
+      command.destinationId,
+    );
+
     const trip = TripAggregate.create({
       userId: command.userId,
+      destinationId: command.destinationId,
       title: command.title,
       startDate: command.startDate,
       endDate: command.endDate,

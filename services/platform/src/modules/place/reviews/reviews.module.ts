@@ -9,6 +9,7 @@ import { BullPlaceReviewEventPublisher } from './infrastructure/events/bull-plac
 import { PlaceReviewRepository } from './infrastructure/persistence/typeorm/place-review.repository.js';
 import { PlaceReviewOrmEntity } from './infrastructure/persistence/typeorm/place-review.orm-entity.js';
 import { PlaceReviewController } from './presentation/controllers/place-review.controller.js';
+import { PlaceReviewAdminController } from './presentation/controllers/place-review-admin.controller.js';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { PlaceReviewController } from './presentation/controllers/place-review.c
     PlaceReviewService,
     PlaceReviewRepository,
   ],
-  controllers: [PlaceReviewController],
+  controllers: [PlaceReviewController, PlaceReviewAdminController],
   exports: [PLACE_REVIEW_EVENT_PUBLISHER, BullModule, PlaceReviewService],
 })
 export class PlaceReviewsModule {}

@@ -19,6 +19,7 @@ export interface PlaceMlProjectionPayload {
     lat: number;
     lng: number;
     categoryId: string;
+    destinationId: string | null;
     averageRating: string | null;
     reviewCount: number;
     catalogStatus: string;
@@ -43,6 +44,7 @@ export class PlaceMlOutboxWriterService {
         lat: Number.parseFloat(String(place.lat)),
         lng: Number.parseFloat(String(place.lng)),
         categoryId: place.categoryId,
+        destinationId: place.destinationId ?? null,
         averageRating: place.averageRating ?? null,
         reviewCount: place.reviewCount ?? 0,
         catalogStatus: place.status,

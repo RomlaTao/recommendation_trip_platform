@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../../../modules/user/entities/user.entity';
-import { Role } from '../../../../modules/permission/entities/role.entity';
-import { UserRole } from '../../../../modules/permission/entities/user-role.entity';
+import { User } from '../../../../modules/user/entities/user.entity.js';
+import { Role } from '../../../../modules/permission/entities/role.entity.js';
+import { UserRole } from '../../../../modules/permission/entities/user-role.entity.js';
 
 const BCRYPT_ROUNDS = 10;
 

@@ -19,6 +19,7 @@ import {
 import { PlaceCatalogService } from '../../application/services/place-catalog.service.js';
 import { NearbyPlacesQueryDto } from '../dtos/nearby-places.query.dto.js';
 import {
+  DestinationDto,
   NearbyPlaceDto,
   PaginatedPlacesDto,
   PlaceCategoryDto,
@@ -38,6 +39,12 @@ export class PlaceCatalogController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiQuery({
     name: 'categoryId',
+    required: false,
+    type: String,
+    format: 'uuid',
+  })
+  @ApiQuery({
+    name: 'destinationId',
     required: false,
     type: String,
     format: 'uuid',
@@ -73,6 +80,14 @@ export class PlaceCatalogController {
   @ApiOkResponse({ type: [PlaceCategoryDto] })
   getCategories() {
     return this.placeCatalogService.getCategories();
+  }
+
+  @Get('destinations')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'List destinations for catalog filters' })
+  @ApiOkResponse({ type: [DestinationDto] })
+  getDestinations() {
+    return this.placeCatalogService.getDestinations();
   }
 
   @Get(':id')

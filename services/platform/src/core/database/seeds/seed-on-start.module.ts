@@ -11,6 +11,7 @@ import { RolePermission } from '../../../modules/permission/entities/role-permis
 import { UserRole } from '../../../modules/permission/entities/user-role.entity';
 import { User } from '../../../modules/user/entities/user.entity';
 import { PartnerOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/partner.orm-entity.js';
+import { DestinationOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/destination.orm-entity.js';
 import { PlaceCategoryOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/place-category.orm-entity.js';
 import { PlaceOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/place.orm-entity.js';
 import { RoleSeeder } from './seeders/role.seeder';
@@ -18,6 +19,7 @@ import { PermissionSeeder } from './seeders/permission.seeder';
 import { RolePermissionSeeder } from './seeders/role-permission.seeder';
 import { UserSeeder } from './seeders/user.seeder';
 import { PartnerSeeder } from './seeders/partner.seeder.js';
+import { DestinationSeeder } from './seeders/destination.seeder.js';
 import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
 import { PlaceSeeder } from './seeders/place.seeder.js';
 import { NotificationPreferenceEntity } from '../../../modules/notification/entities/notification-preference.entity.js';
@@ -41,6 +43,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
     private readonly userSeeder: UserSeeder,
     private readonly partnerSeeder: PartnerSeeder,
     private readonly placeCategorySeeder: PlaceCategorySeeder,
+    private readonly destinationSeeder: DestinationSeeder,
     private readonly placeSeeder: PlaceSeeder,
     private readonly notificationPreferenceSeeder: NotificationPreferenceSeeder,
   ) {}
@@ -54,6 +57,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
       await this.userSeeder.run();
       await this.partnerSeeder.run();
       await this.placeCategorySeeder.run();
+      await this.destinationSeeder.run();
       await this.placeSeeder.run();
       await this.notificationPreferenceSeeder.run();
       this.logger.log('Startup seeding completed successfully.');
@@ -79,6 +83,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
       User,
       UserRole,
       PartnerOrmEntity,
+      DestinationOrmEntity,
       PlaceCategoryOrmEntity,
       PlaceOrmEntity,
       NotificationPreferenceEntity,
@@ -91,6 +96,7 @@ class SeedOnStartService implements OnApplicationBootstrap {
     UserSeeder,
     PartnerSeeder,
     PlaceCategorySeeder,
+    DestinationSeeder,
     PlaceSeeder,
     NotificationPreferenceSeeder,
     SeedOnStartService,

@@ -17,6 +17,7 @@ export interface PlaceCsvRow {
   average_rating: string;
   review_count: string;
   category_id: string;
+  destination_id: string;
   created_at: string;
   updated_at: string;
   tag_scores: string;
@@ -101,6 +102,7 @@ export function readPlaceCsvRows(
         average_rating: rec.average_rating ?? '',
         review_count: rec.review_count ?? '',
         category_id: rec.category_id ?? '',
+        destination_id: rec.destination_id ?? '',
         created_at: rec.created_at ?? '',
         updated_at: rec.updated_at ?? '',
         tag_scores: rec.tag_scores ?? '',

@@ -1,6 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../../../../core/database/base.entity.js';
 import { PlaceRegistrationRequestStatus } from '../../../enums/place-registration-request-status.enum.js';
+import { DestinationOrmEntity } from './destination.orm-entity.js';
 import { PartnerOrmEntity } from './partner.orm-entity.js';
 import { PlaceCategoryOrmEntity } from './place-category.orm-entity.js';
 import { PlaceOrmEntity } from './place.orm-entity.js';
@@ -36,6 +37,9 @@ export class PlaceRegistrationRequestOrmEntity extends BaseEntity {
   @Column({ type: 'uuid' })
   categoryId: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  destinationId?: string | null;
+
   @Column({ type: 'uuid' })
   partnerId: string;
 
@@ -60,6 +64,10 @@ export class PlaceRegistrationRequestOrmEntity extends BaseEntity {
   @ManyToOne(() => PlaceCategoryOrmEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'categoryId' })
   category: PlaceCategoryOrmEntity;
+
+  @ManyToOne(() => DestinationOrmEntity, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'destinationId' })
+  destination?: DestinationOrmEntity | null;
 
   @ManyToOne(() => PartnerOrmEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'partnerId' })

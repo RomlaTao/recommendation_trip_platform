@@ -1,5 +1,13 @@
 import { Transform } from 'class-transformer';
-import { IsInt, IsLatitude, IsLongitude, Max, Min } from 'class-validator';
+import {
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsOptional,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
 export class NearbyPlacesQueryDto {
@@ -37,4 +45,9 @@ export class NearbyPlacesQueryDto {
   @Min(1)
   @Max(30)
   limit = 20;
+
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  destinationId?: string;
 }

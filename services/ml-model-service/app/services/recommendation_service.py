@@ -36,13 +36,13 @@ class ItineraryRecommendationService:
                 pass
 
         t0 = time.perf_counter()
-        lat0 = payload.trip_context.last_location.latitude
-        lon0 = payload.trip_context.last_location.longitude
+        lat0 = payload.day_context.last_location.latitude
+        lon0 = payload.day_context.last_location.longitude
         radius = payload.constraints.radius_km
         top_k = payload.constraints.top_k
         cats = payload.constraints.category_filter
 
-        exclude = {x.strip().lower() for x in payload.trip_context.draft_route_ids if x}
+        exclude = {x.strip().lower() for x in payload.day_context.draft_route_ids if x}
         places = fetch_projection_candidates(lat0, lon0, radius, exclude)
 
         scored_rows: list[tuple[float, float, float]] = []

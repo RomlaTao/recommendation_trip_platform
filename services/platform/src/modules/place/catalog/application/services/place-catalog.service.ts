@@ -11,12 +11,14 @@ import {
 import type {
   PlaceCatalogDetailReadModel,
   PlaceCatalogRepositoryPort,
+  DestinationReadModel,
   PlaceCategoryReadModel,
 } from '../ports/place-catalog-repository.port.js';
 
 export interface GetPlacesInput {
   q?: string;
   categoryId?: string;
+  destinationId?: string;
   minRating?: number;
   sort: PlaceCatalogSort;
   page: number;
@@ -28,6 +30,7 @@ export interface GetNearbyPlacesInput {
   lng: number;
   radiusInMeters: number;
   limit: number;
+  destinationId?: string;
 }
 
 @Injectable()
@@ -43,6 +46,7 @@ export class PlaceCatalogService {
     const query: SearchPlacesQuery = {
       q: input.q?.trim() || undefined,
       categoryId: input.categoryId,
+      destinationId: input.destinationId,
       minRating: input.minRating,
       sort: input.sort,
       page: input.page,
@@ -65,6 +69,10 @@ export class PlaceCatalogService {
     return this.repository.listCategories();
   }
 
+  getDestinations(): Promise<DestinationReadModel[]> {
+    return this.repository.listDestinations();
+  }
+
   getNearbyPlaces(
     input: GetNearbyPlacesInput,
   ): Promise<NearbyPlaceReadModel[]> {
@@ -73,6 +81,7 @@ export class PlaceCatalogService {
       lng: input.lng,
       radiusInMeters: input.radiusInMeters,
       limit: input.limit,
+      destinationId: input.destinationId,
     };
     const startedAt = Date.now();
 

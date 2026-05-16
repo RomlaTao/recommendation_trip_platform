@@ -7,7 +7,11 @@ import {
 } from '../../shared/events/place-review.events.js';
 import { PLACE_REVIEW_EVENT_PUBLISHER } from './reviews.di-tokens.js';
 import type { PlaceReviewEventPublisherPort } from './ports/place-review-event-publisher.port.js';
-import { PlaceReviewRepository } from '../infrastructure/persistence/typeorm/place-review.repository.js';
+import {
+  PlaceReviewRepository,
+} from '../infrastructure/persistence/typeorm/place-review.repository.js';
+import type { AdminListReviewsQueryDto } from '../presentation/dtos/admin-list-reviews.query.dto.js';
+import { AdminReviewListStatusFilter } from '../presentation/dtos/admin-list-reviews.query.dto.js';
 import { CreateReviewDto } from '../presentation/dtos/create-review.dto.js';
 import { UpdateReviewDto } from '../presentation/dtos/update-review.dto.js';
 
@@ -138,6 +142,68 @@ export class PlaceReviewService {
     );
 
     return saved;
+  }
+
+  async listReviewsForAdmin(query: AdminListReviewsQueryDto) {
+    const status =
+      query.status === AdminReviewListStatusFilter.DELETED
+        ? 'deleted'
+        : query.status === AdminReviewListStatusFilter.ACTIVE
+          ? 'active'
+          : 'all';
+
+    const { items, total } = await this.placeReviewRepository.findAllForAdmin({
+      page: query.page,
+      limit: query.limit,
+      q: query.q,
+      rating: query.rating,
+      status,
+    });
+
+    return {
+      items: items.map((row) => ({
+        id: row.id,
+        placeId: row.placeId,
+        placeName: row.placeName ?? '-',
+        userId: row.userId,
+        authorName: row.authorName ?? 'unknown',
+        rating: Number(row.rating),
+        comment: row.comment ?? null,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        deletedAt: row.deletedAt,
+      })),
+      total,
+      page: query.page,
+      limit: query.limit,
+    };
+  }
+
+  async deleteReviewByAdmin(reviewId: string): Promise<void> {
+    const review = await this.placeReviewRepository.findById(reviewId);
+    if (!review) {
+      throw new ResourceNotFoundError('review_not_found');
+    }
+
+    await this.placeReviewRepository.softDelete(reviewId);
+
+    await this.reviewEventPublisher.publish(
+      createReviewDeletedEvent({
+        reviewId: review.id,
+        placeId: review.placeId,
+        userId: review.userId,
+        rating: review.rating,
+      }),
+    );
+  }
+
+  async restoreReviewByAdmin(reviewId: string): Promise<void> {
+    const review = await this.placeReviewRepository.findById(reviewId, true);
+    if (!review) {
+      throw new ResourceNotFoundError('review_not_found');
+    }
+
+    await this.placeReviewRepository.restore(reviewId);
   }
 
   async deleteOwnReview(reviewId: string, userId: string): Promise<void> {

@@ -15,6 +15,7 @@ export class PlaceMapper {
       lng: entity.lng,
       categoryId: entity.categoryId,
       partnerId: entity.partnerId,
+      destinationId: entity.destinationId ?? null,
       status: entity.status as unknown as PlaceManagementStatus,
       rejectionReason: entity.rejectionReason,
       openingHours: entity.openingHours,
@@ -46,6 +47,7 @@ export class PlaceMapper {
     entity.lng = snapshot.lng;
     entity.categoryId = snapshot.categoryId;
     entity.partnerId = snapshot.partnerId;
+    entity.destinationId = snapshot.destinationId ?? null;
     entity.status = snapshot.status as unknown as PlaceOrmEntity['status'];
     entity.rejectionReason = snapshot.rejectionReason;
     entity.openingHours = snapshot.openingHours;

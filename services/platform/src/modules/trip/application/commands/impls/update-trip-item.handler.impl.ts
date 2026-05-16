@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
-import { TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
+import { TRIP_PLACE_READ_PORT, TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
+import type { TripPlaceReadPort } from '../../ports/trip-place-read.port.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
 import {
   UpdateTripItemCommand,
@@ -12,6 +13,8 @@ export class UpdateTripItemHandlerImpl implements UpdateTripItemHandler {
   constructor(
     @Inject(TRIP_REPOSITORY)
     private readonly tripRepository: TripRepositoryPort,
+    @Inject(TRIP_PLACE_READ_PORT)
+    private readonly tripPlaceRead: TripPlaceReadPort,
   ) {}
 
   async execute(command: UpdateTripItemCommand): Promise<void> {
@@ -21,8 +24,16 @@ export class UpdateTripItemHandlerImpl implements UpdateTripItemHandler {
       throw new ResourceNotFoundError('trip_not_found');
     }
 
-    if (trip.toSnapshot().userId !== command.userId) {
+    const snapshot = trip.toSnapshot();
+    if (snapshot.userId !== command.userId) {
       throw new ResourceNotFoundError('trip_not_found');
+    }
+
+    if (command.placeId) {
+      await this.tripPlaceRead.assertPlaceMatchesDestination(
+        command.placeId,
+        snapshot.destinationId,
+      );
     }
 
     trip.updateItem({

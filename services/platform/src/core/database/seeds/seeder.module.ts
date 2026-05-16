@@ -1,20 +1,22 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import databaseConfig, { DatabaseConfig } from '../../config/database.config';
-import { Role } from '../../../modules/permission/entities/role.entity';
-import { Permission } from '../../../modules/permission/entities/permission.entity';
-import { RolePermission } from '../../../modules/permission/entities/role-permission.entity';
-import { UserRole } from '../../../modules/permission/entities/user-role.entity';
-import { User } from '../../../modules/user/entities/user.entity';
+import databaseConfig, { DatabaseConfig } from '../../config/database.config.js';
+import { Role } from '../../../modules/permission/entities/role.entity.js';
+import { Permission } from '../../../modules/permission/entities/permission.entity.js';
+import { RolePermission } from '../../../modules/permission/entities/role-permission.entity.js';
+import { UserRole } from '../../../modules/permission/entities/user-role.entity.js';
+import { User } from '../../../modules/user/entities/user.entity.js';
 import { PartnerOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/partner.orm-entity.js';
+import { DestinationOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/destination.orm-entity.js';
 import { PlaceCategoryOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/place-category.orm-entity.js';
 import { PlaceOrmEntity } from '../../../modules/place/management/infrastructure/persistence/typeorm/place.orm-entity.js';
-import { RoleSeeder } from './seeders/role.seeder';
-import { PermissionSeeder } from './seeders/permission.seeder';
-import { RolePermissionSeeder } from './seeders/role-permission.seeder';
-import { UserSeeder } from './seeders/user.seeder';
+import { RoleSeeder } from './seeders/role.seeder.js';
+import { PermissionSeeder } from './seeders/permission.seeder.js';
+import { RolePermissionSeeder } from './seeders/role-permission.seeder.js';
+import { UserSeeder } from './seeders/user.seeder.js';
 import { PartnerSeeder } from './seeders/partner.seeder.js';
+import { DestinationSeeder } from './seeders/destination.seeder.js';
 import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
 import { PlaceSeeder } from './seeders/place.seeder.js';
 import { NotificationPreferenceEntity } from '../../../modules/notification/entities/notification-preference.entity.js';
@@ -50,6 +52,7 @@ import { NotificationPreferenceSeeder } from './seeders/notification-preference.
             User,
             UserRole,
             PartnerOrmEntity,
+            DestinationOrmEntity,
             PlaceCategoryOrmEntity,
             PlaceOrmEntity,
             NotificationPreferenceEntity,
@@ -67,6 +70,7 @@ import { NotificationPreferenceSeeder } from './seeders/notification-preference.
       User,
       UserRole,
       PartnerOrmEntity,
+      DestinationOrmEntity,
       PlaceCategoryOrmEntity,
       PlaceOrmEntity,
       NotificationPreferenceEntity,
@@ -79,6 +83,7 @@ import { NotificationPreferenceSeeder } from './seeders/notification-preference.
     UserSeeder,
     PartnerSeeder,
     PlaceCategorySeeder,
+    DestinationSeeder,
     PlaceSeeder,
     NotificationPreferenceSeeder,
   ],

@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Role } from '../../../../modules/permission/entities/role.entity';
-import { Permission } from '../../../../modules/permission/entities/permission.entity';
-import { RolePermission } from '../../../../modules/permission/entities/role-permission.entity';
-import { ROLE_PERMISSION_MAP } from '../data/permissions.data';
+import { Role } from '../../../../modules/permission/entities/role.entity.js';
+import { Permission } from '../../../../modules/permission/entities/permission.entity.js';
+import { RolePermission } from '../../../../modules/permission/entities/role-permission.entity.js';
+import { ROLE_PERMISSION_MAP } from '../data/permissions.data.js';
 
 @Injectable()
 export class RolePermissionSeeder {

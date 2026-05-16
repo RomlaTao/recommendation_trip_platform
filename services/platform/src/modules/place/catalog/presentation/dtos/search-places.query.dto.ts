@@ -25,6 +25,11 @@ export class SearchPlacesQueryDto {
   @IsUUID()
   categoryId?: string;
 
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  destinationId?: string;
+
   @ApiPropertyOptional({ example: 4.2, minimum: 0, maximum: 5 })
   @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
   @IsOptional()
