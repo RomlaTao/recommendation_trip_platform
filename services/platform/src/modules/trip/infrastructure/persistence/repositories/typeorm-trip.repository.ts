@@ -1,0 +1,136 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
+
+import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
+import { TripRepositoryPort } from '../../../application/ports/trip.repository.port.js';
+import { TripAggregate } from '../../../domain/aggregates/trip.aggregate.js';
+import type { TripRouteOverviewSnapshot } from '../../../domain/read-models/trip-route-overview.snapshot.js';
+import { TripRouteOverviewBuilder } from '../../../domain/services/trip-route-overview.builder.js';
+import type { TripDayEntity } from '../../../domain/entities/trip-day.entity.js';
+import { TripMapper } from '../mappers/trip.mapper.js';
+import { TripDayOrmEntity } from '../typeorm/trip-day.orm-entity.js';
+import { TripItemOrmEntity } from '../typeorm/trip-item.orm-entity.js';
+import { TripOrmEntity } from '../typeorm/trip.orm-entity.js';
+
+@Injectable()
+export class TypeormTripRepository implements TripRepositoryPort {
+  constructor(
+    @InjectRepository(TripOrmEntity)
+    private readonly repository: Repository<TripOrmEntity>,
+    private readonly mapper: TripMapper,
+  ) {}
+
+  async save(trip: TripAggregate): Promise<void> {
+    const snapshot = trip.toSnapshot();
+    const orm = this.mapper.toPersistence(trip);
+
+    await this.repository.manager.transaction(async (em) => {
+      const tripRepo = em.getRepository(TripOrmEntity);
+      const exists = await tripRepo.exist({ where: { id: snapshot.id } });
+
+      if (exists) {
+        await this.deleteOrphanChildren(em, snapshot.id, snapshot.days);
+      }
+
+      await tripRepo.save(orm);
+    });
+  }
+
+  private async deleteOrphanChildren(
+    em: EntityManager,
+    tripId: string,
+    days: TripDayEntity[],
+  ): Promise<void> {
+    const wantedDayIds = new Set(days.map((d) => d.toSnapshot().id));
+    const wantedItemIds = new Set(
+      days.flatMap((d) => d.toSnapshot().items.map((i) => i.id)),
+    );
+
+    const dayRepo = em.getRepository(TripDayOrmEntity);
+    const itemRepo = em.getRepository(TripItemOrmEntity);
+
+    const persistedDays = await dayRepo.find({
+      where: { tripId },
+      relations: { items: true },
+    });
+
+    for (const day of persistedDays) {
+      if (!wantedDayIds.has(day.id)) {
+        await dayRepo.delete(day.id);
+        continue;
+      }
+
+      for (const item of day.items ?? []) {
+        if (!wantedItemIds.has(item.id)) {
+          await itemRepo.delete(item.id);
+        }
+      }
+    }
+  }
+
+  async findById(id: string): Promise<TripAggregate | null> {
+    const orm = await this.repository.findOne({
+      where: { id },
+      relations: {
+        days: {
+          items: true,
+        },
+      },
+    });
+
+    if (!orm) {
+      return null;
+    }
+
+    return this.mapper.toDomain(orm);
+  }
+
+  async findByUserId(input: {
+    userId: string;
+    page: number;
+    limit: number;
+  }): Promise<TripAggregate[]> {
+    const offset = (input.page - 1) * input.limit;
+
+    const ormTrips = await this.repository.find({
+      where: { userId: input.userId },
+      order: { updatedAt: 'DESC' },
+      skip: offset,
+      take: input.limit,
+      relations: {
+        days: {
+          items: true,
+        },
+      },
+    });
+
+    return ormTrips.map((trip) => this.mapper.toDomain(trip));
+  }
+
+  async findRouteOverviewByTripId(
+    tripId: string,
+  ): Promise<TripRouteOverviewSnapshot | null> {
+    const row = await this.repository.findOne({
+      where: { id: tripId },
+      select: ['id', 'routeOverview'],
+    });
+    if (!row?.routeOverview) {
+      return null;
+    }
+    return TripRouteOverviewBuilder.parseStored(row.routeOverview);
+  }
+
+  async saveRouteOverview(
+    tripId: string,
+    overview: TripRouteOverviewSnapshot,
+  ): Promise<void> {
+    const updated = await this.repository.update(
+      { id: tripId },
+      { routeOverview: overview },
+    );
+    if (!updated.affected) {
+      throw new ResourceNotFoundError('trip_not_found');
+    }
+  }
+}

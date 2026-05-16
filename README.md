@@ -23,112 +23,71 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Monorepo for the trip recommendation backend and future ML services.
 
-## Project setup
+| Path | Role |
+|------|------|
+| `services/platform/` | NestJS API (main application) |
+| `services/ml-model-service/` | FastAPI ML / inference service |
+| `docker-compose.yml` | Hai Postgres độc lập (`postgres-platform`, `postgres-ml`), Redis, RabbitMQ, optional `platform` + `ml-model-service` |
+
+## Project setup (API)
+
+All `npm` commands for the API run from `services/platform`:
 
 ```bash
-$ npm install
+cd services/platform
+npm install
 ```
 
-## Compile and run the project
+## Compile and run the API
 
 ```bash
+cd services/platform
+
 # development
-$ npm run start
+npm run start
 
 # watch mode
-$ npm run start:dev
+npm run start:dev
 
 # production mode
-$ npm run start:prod
+npm run start:prod
 ```
 
-## Database migrations (local)
+**Environment:** Copy the repository root `.env.example` to `.env` (includes **`PLATFORM_DB_*`** for Nest and **`ML_DB_*`** for the ML service). Copy or symlink that `.env` to `services/platform/.env` so `ConfigModule` sees the same values when you run the API from `services/platform`.
 
-Run migrations locally even when using a local database so your schema/indexes stay aligned with the codebase (especially catalog search and PostGIS/query-performance indexes).
+## Databases (localhost)
 
-### 1) Start local services
+Compose chạy **hai container PostgreSQL riêng** (hai volume):
+
+| Service | Mục đích | Port host mặc định |
+|---------|----------|---------------------|
+| `postgres-platform` | Nest / TypeORM | `5432` → `PLATFORM_DB_PORT` |
+| `postgres-ml` | ML projection (`docker/postgres/ml-init`) | `5433` → `ML_DB_PORT` |
 
 ```bash
-# postgres + redis
-$ docker compose up -d
+# Chỉ database + Redis + RabbitMQ
+docker compose up -d postgres-platform postgres-ml redis rabbitmq
 
-# or postgres only
-$ docker compose up -d postgres
+# Kèm API + ML
+docker compose up -d
 ```
 
-### 2) Ensure environment variables are set
+Trong `.env` khi chạy app **trên host** (npm / uvicorn): `PLATFORM_DB_HOST=localhost`, `PLATFORM_DB_PORT=5432`, `ML_DB_HOST=localhost`, `ML_DB_PORT=5433` (khớp map cổng của `postgres-ml`).
 
-Required DB vars in `.env`:
+Biến: `PLATFORM_DB_*` (platform), `ML_DB_*` (ML). Tên `DB_*` cũ vẫn được đọc làm fallback cho platform nếu thiếu `PLATFORM_DB_*`.
 
-- `DB_HOST`
-- `DB_PORT`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-- `DB_DATABASE`
-
-### 3) Run migration command
-
-Run all pending migrations:
-
-```bash
-$ npm run migration:run
-```
-
-Useful migration commands:
-
-```bash
-# list executed/pending migrations
-$ npm run migration:show
-
-# revert last migration
-$ npm run migration:revert
-
-# create an empty migration template
-$ npm run migration:create
-```
-
-The migration CLI uses a dedicated CommonJS datasource (build step runs automatically, migrations run from `dist`):
-
-- `src/core/database/typeorm.datasource.cjs`
-
-Source datasource file:
-
-- `src/core/database/typeorm.datasource.ts`
-
-Reference migration file:
-
-- `src/core/database/migrations/1760000002000-OptimizePlaceCatalogSearchIndexes.ts`
-
-### 4) Verify migration results
-
-```sql
-SELECT extname FROM pg_extension WHERE extname = 'pg_trgm';
-
-SELECT indexname
-FROM pg_indexes
-WHERE tablename IN ('places', 'place_categories')
-ORDER BY indexname;
-```
-
-### Why this matters in local
-
-- Keeps local query plans consistent with team/staging environments.
-- Avoids false performance conclusions during `EXPLAIN ANALYZE`.
-- Ensures catalog keyword search (`ILIKE`) uses the intended trigram index path.
+Trên localhost bạn có thể bật `synchronize`/bỏ qua migration theo nhu cầu; khi cần migration TypeORM, xem `npm run migration:*` trong `services/platform`.
 
 ## Run tests
 
 ```bash
-# unit tests
-$ npm run test
+cd services/platform
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run test
+npm run test:e2e
+npm run test:cov
 ```
 
 ## Deployment
