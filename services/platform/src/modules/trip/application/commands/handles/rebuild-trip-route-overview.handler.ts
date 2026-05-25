@@ -1,4 +1,4 @@
-import { TripRouteOverviewModel } from '../../models/trip-route-overview.model.js';
+import type { TripRouteOverviewSnapshot } from '../../../domain/read-models/trip-route-overview.snapshot.js';
 
 export interface RebuildTripRouteOverviewCommand {
   tripId: string;
@@ -8,5 +8,5 @@ export interface RebuildTripRouteOverviewCommand {
 export abstract class RebuildTripRouteOverviewHandler {
   abstract execute(
     command: RebuildTripRouteOverviewCommand,
-  ): Promise<TripRouteOverviewModel>;
+  ): Promise<TripRouteOverviewSnapshot>;
 }

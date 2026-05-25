@@ -1,4 +1,4 @@
-export interface TripRouteWaypointModel {
+export interface TripRouteWaypointSnapshot {
   tripItemId: string;
   placeId: string;
   dayIndex: number;
@@ -8,8 +8,8 @@ export interface TripRouteWaypointModel {
   lng: number;
 }
 
-export interface TripRouteOverviewModel {
+export interface TripRouteOverviewSnapshot {
   generatedAt: string;
   tripVersion: number;
-  waypoints: TripRouteWaypointModel[];
+  waypoints: TripRouteWaypointSnapshot[];
 }

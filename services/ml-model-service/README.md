@@ -112,7 +112,10 @@ Cấu trúc JSON Payload từ Platform gửi lên ML-Model-Service
   },
   "trip_context": {
     "region_id": "vungtauCity",
-    "current_time": "2026-05-14T14:30:00Z",
+    "current_time": "2026-05-14T14:30:00Z"
+  },
+  "day_context": {
+    "day_id": "12b28c1f-1927-4f0a-a861-637396f3b7d1",
     "last_location": {
       "latitude": 10.3459,
       "longitude": 107.0843
@@ -213,7 +216,7 @@ Kế hoạch dưới đây **khớp với mục §5 (contract JSON)**, **§6 (HT
 ### Định danh trong JSON (§5)
 
 - **`location_id` trong response** = **`places.id`** (UUID) trên platform, **không** dùng prefix kiểu `loc_*` trong tích hợp thật (ví dụ §5 chỉ minh họa).
-- **`draft_route_ids`** (nếu có) = danh sách **UUID place** đã có trong lộ trình nháp; ML có thể dùng để trừ trùng / boost liên quan khi mở rộng schema (vẫn nằm trong `trip_context` của cùng contract §5).
+- **`day_context.draft_route_ids`** (nếu có) = danh sách **UUID place** đã có trên **ngày đang plan** (`day_id`); ML dùng để trừ trùng trong ranking.
 
 ---
 
@@ -270,13 +273,14 @@ Projection ML cần bám các thay đổi có ý nghĩa, ví dụ:
 - **Giữ endpoint §6:** `POST /api/v1/itinerary/recommendations`.
 - **Input / output** chính thức là schema Pydantic hiện có — **map trực tiếp** với ví dụ JSON §5:
   - `user_context` ↔ `user_id`, …
-  - `trip_context` ↔ `region_id`, `current_time`, `last_location`, `draft_route_ids`
+  - `trip_context` ↔ `region_id`, `current_time`
+  - `day_context` ↔ `day_id`, `last_location`, `draft_route_ids`
   - `constraints` ↔ `radius_km`, `top_k`, `category_filter`  
   Mọi mở rộng (time window, tag ưu tiên) = **phiên bản contract** hoặc field optional có version.
 
 #### 3.2 Redis (HTTP inference cache)
 
-- **Trạng thái: DONE** — key = `ml_inference_cache_key_prefix` + SHA-256(JSON chuẩn hóa): `model_version` ranker, `user_id`, `region_id`, `current_time`, lat/lon (5 chữ số thập phân), `draft_route_ids` / `category_filter` đã sort + lowercase, `radius_km`, `top_k`.
+- **Trạng thái: DONE** — key = `ml_inference_cache_key_prefix` + SHA-256(JSON chuẩn hóa): `model_version` ranker, `user_id`, `region_id`, `current_time`, `day_id`, lat/lon (5 chữ số thập phân), `draft_route_ids` / `category_filter` đã sort + lowercase, `radius_km`, `top_k`.
 - **TTL:** `ML_INFERENCE_CACHE_TTL_SECONDS` (mặc định 900). Không invalidation theo `place_id` trong MVP (dữ liệu có thể trễ tối đa một TTL).
 
 #### 3.3 Lọc candidate từ projection

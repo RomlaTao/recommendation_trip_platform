@@ -1,9 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
-import { TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
+import {
+  TRIP_PLACE_READ_PORT,
+  TRIP_REPOSITORY,
+} from '../../../trip.di-tokens.js';
+import { TripRouteOverviewBuilder } from '../../../domain/services/trip-route-overview.builder.js';
+import type { TripPlaceReadPort } from '../../ports/trip-place-read.port.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
-import { TripRouteOverviewService } from '../../services/trip-route-overview.service.js';
+import type { TripRouteOverviewSnapshot } from '../../../domain/read-models/trip-route-overview.snapshot.js';
 import {
   RebuildTripRouteOverviewCommand,
   RebuildTripRouteOverviewHandler,
@@ -16,10 +21,13 @@ export class RebuildTripRouteOverviewHandlerImpl
   constructor(
     @Inject(TRIP_REPOSITORY)
     private readonly tripRepository: TripRepositoryPort,
-    private readonly routeOverviewService: TripRouteOverviewService,
+    @Inject(TRIP_PLACE_READ_PORT)
+    private readonly tripPlaceRead: TripPlaceReadPort,
   ) {}
 
-  async execute(command: RebuildTripRouteOverviewCommand) {
+  async execute(
+    command: RebuildTripRouteOverviewCommand,
+  ): Promise<TripRouteOverviewSnapshot> {
     const trip = await this.tripRepository.findById(command.tripId);
     if (!trip) {
       throw new ResourceNotFoundError('trip_not_found');
@@ -30,6 +38,18 @@ export class RebuildTripRouteOverviewHandlerImpl
       throw new ResourceNotFoundError('trip_not_found');
     }
 
-    return this.routeOverviewService.rebuild(snapshot);
+    const placeIds = new Set<string>();
+    for (const day of snapshot.days) {
+      for (const item of day.toSnapshot().items) {
+        placeIds.add(item.placeId);
+      }
+    }
+
+    const places = await this.tripPlaceRead.findApprovedRoutePlaces([
+      ...placeIds,
+    ]);
+    const overview = TripRouteOverviewBuilder.build(snapshot, places);
+    await this.tripRepository.saveRouteOverview(snapshot.id, overview);
+    return overview;
   }
 }

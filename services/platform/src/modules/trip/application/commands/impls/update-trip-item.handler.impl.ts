@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
-import { TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
-import { TripPlaceDestinationValidator } from '../../services/trip-place-destination.validator.js';
+import { TRIP_PLACE_READ_PORT, TRIP_REPOSITORY } from '../../../trip.di-tokens.js';
+import type { TripPlaceReadPort } from '../../ports/trip-place-read.port.js';
 import type { TripRepositoryPort } from '../../ports/trip.repository.port.js';
 import {
   UpdateTripItemCommand,
@@ -13,7 +13,8 @@ export class UpdateTripItemHandlerImpl implements UpdateTripItemHandler {
   constructor(
     @Inject(TRIP_REPOSITORY)
     private readonly tripRepository: TripRepositoryPort,
-    private readonly placeDestinationValidator: TripPlaceDestinationValidator,
+    @Inject(TRIP_PLACE_READ_PORT)
+    private readonly tripPlaceRead: TripPlaceReadPort,
   ) {}
 
   async execute(command: UpdateTripItemCommand): Promise<void> {
@@ -29,7 +30,7 @@ export class UpdateTripItemHandlerImpl implements UpdateTripItemHandler {
     }
 
     if (command.placeId) {
-      await this.placeDestinationValidator.assertPlaceMatchesDestination(
+      await this.tripPlaceRead.assertPlaceMatchesDestination(
         command.placeId,
         snapshot.destinationId,
       );

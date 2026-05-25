@@ -5,10 +5,13 @@ import { In, IsNull, Repository } from 'typeorm';
 import { ResourceNotFoundError } from '../../../../common/errors/app.error.js';
 import { DestinationOrmEntity } from '../../../place/management/infrastructure/persistence/typeorm/destination.orm-entity.js';
 import { PlaceOrmEntity } from '../../../place/management/infrastructure/persistence/typeorm/place.orm-entity.js';
+import { PlaceStatus } from '../../../place/management/enums/place-status.enum.js';
+import type { TripPlaceReadPort } from '../../application/ports/trip-place-read.port.js';
 import { TripPlaceDestinationMismatchError } from '../../domain/errors/trip-place-destination-mismatch.error.js';
+import type { RoutePlaceCoord } from '../../domain/services/trip-route-overview.builder.js';
 
 @Injectable()
-export class TripPlaceDestinationValidator {
+export class TypeormTripPlaceReadAdapter implements TripPlaceReadPort {
   constructor(
     @InjectRepository(DestinationOrmEntity)
     private readonly destinationRepository: Repository<DestinationOrmEntity>,
@@ -69,5 +72,37 @@ export class TripPlaceDestinationValidator {
     if (hasMismatch) {
       throw new TripPlaceDestinationMismatchError();
     }
+  }
+
+  async findApprovedRoutePlaces(placeIds: string[]): Promise<RoutePlaceCoord[]> {
+    if (placeIds.length === 0) {
+      return [];
+    }
+
+    const uniquePlaceIds = [...new Set(placeIds)];
+    const places = await this.placeRepository.find({
+      where: {
+        id: In(uniquePlaceIds),
+        deletedAt: IsNull(),
+        status: PlaceStatus.APPROVED,
+      },
+      select: ['id', 'name', 'lat', 'lng'],
+    });
+
+    const coords: RoutePlaceCoord[] = [];
+    for (const place of places) {
+      const lat = Number(place.lat);
+      const lng = Number(place.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        continue;
+      }
+      coords.push({
+        id: place.id,
+        name: place.name,
+        lat,
+        lng,
+      });
+    }
+    return coords;
   }
 }
