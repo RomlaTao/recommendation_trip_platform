@@ -26,13 +26,14 @@ import { CurrentUser } from '../../../../../common/decorators/current-user.decor
 import { PaginationDto } from '../../../../../common/dtos/pagination.dto.js';
 import type { JwtPayload } from '../../../../../common/interfaces/jwt-payload.interface.js';
 import { JwtAuthGuard } from '../../../../../core/guards/jwt-auth.guard.js';
-import { PlaceReviewService } from '../../application/place-review.service.js';
+import { PlaceReviewService } from '../../application/services/place-review.service.js';
 import { CreateReviewDto } from '../dtos/create-review.dto.js';
 import {
   PaginatedPlaceReviewsDto,
   PlaceReviewDto,
 } from '../dtos/review-response.dto.js';
 import { UpdateReviewDto } from '../dtos/update-review.dto.js';
+import { PlaceReviewPresentationMapper } from '../mappers/place-review-presentation.mapper.js';
 
 @ApiTags('Place Reviews')
 @Controller()
@@ -44,15 +45,22 @@ export class PlaceReviewController {
   @ApiOperation({ summary: 'List place reviews (paginated)' })
   @ApiParam({ name: 'placeId', type: String, format: 'uuid' })
   @ApiOkResponse({ type: PaginatedPlaceReviewsDto })
-  getPlaceReviews(
+  async getPlaceReviews(
     @Param('placeId', new ParseUUIDPipe()) placeId: string,
     @Query() query: PaginationDto,
-  ) {
-    return this.placeReviewService.getPlaceReviews(
-      placeId,
-      query.page,
-      query.limit,
-    );
+  ): Promise<PaginatedPlaceReviewsDto> {
+    const result = await this.placeReviewService.getPlaceReviews(placeId, {
+      page: query.page,
+      limit: query.limit,
+    });
+    return {
+      items: result.items.map((item) =>
+        PlaceReviewPresentationMapper.toPlaceReviewResponse(item),
+      ),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
   }
 
   @Post('places/:placeId/reviews')
@@ -67,12 +75,21 @@ export class PlaceReviewController {
   @ApiParam({ name: 'placeId', type: String, format: 'uuid' })
   @ApiBody({ type: CreateReviewDto })
   @ApiOkResponse({ type: PlaceReviewDto })
-  upsertReview(
+  async upsertReview(
     @Param('placeId', new ParseUUIDPipe()) placeId: string,
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateReviewDto,
-  ) {
-    return this.placeReviewService.upsertReview(placeId, user.sub, dto);
+  ): Promise<PlaceReviewDto> {
+    const review = await this.placeReviewService.upsertReview(
+      placeId,
+      user.sub,
+      {
+        rating: dto.rating,
+        comment: dto.comment,
+        imageUrls: dto.imageUrls,
+      },
+    );
+    return PlaceReviewPresentationMapper.toPlaceReviewResponse(review);
   }
 
   @Patch('reviews/:reviewId')
@@ -84,12 +101,21 @@ export class PlaceReviewController {
   @ApiParam({ name: 'reviewId', type: String, format: 'uuid' })
   @ApiBody({ type: UpdateReviewDto })
   @ApiOkResponse({ type: PlaceReviewDto })
-  updateReview(
+  async updateReview(
     @Param('reviewId', new ParseUUIDPipe()) reviewId: string,
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateReviewDto,
-  ) {
-    return this.placeReviewService.updateOwnReview(reviewId, user.sub, dto);
+  ): Promise<PlaceReviewDto> {
+    const review = await this.placeReviewService.updateOwnReview(
+      reviewId,
+      user.sub,
+      {
+        rating: dto.rating,
+        comment: dto.comment,
+        imageUrls: dto.imageUrls,
+      },
+    );
+    return PlaceReviewPresentationMapper.toPlaceReviewResponse(review);
   }
 
   @Delete('reviews/:reviewId')

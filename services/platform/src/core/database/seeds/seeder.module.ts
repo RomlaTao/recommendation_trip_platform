@@ -19,7 +19,7 @@ import { PartnerSeeder } from './seeders/partner.seeder.js';
 import { DestinationSeeder } from './seeders/destination.seeder.js';
 import { PlaceCategorySeeder } from './seeders/place-category.seeder.js';
 import { PlaceSeeder } from './seeders/place.seeder.js';
-import { NotificationPreferenceEntity } from '../../../modules/notification/entities/notification-preference.entity.js';
+import { NotificationPreferenceOrmEntity } from '../../../modules/notification/infrastructure/persistence/typeorm/notification-preference.orm-entity.js';
 import { NotificationPreferenceSeeder } from './seeders/notification-preference.seeder.js';
 
 /**
@@ -55,7 +55,7 @@ import { NotificationPreferenceSeeder } from './seeders/notification-preference.
             DestinationOrmEntity,
             PlaceCategoryOrmEntity,
             PlaceOrmEntity,
-            NotificationPreferenceEntity,
+            NotificationPreferenceOrmEntity,
           ],
           synchronize: false,
           logging: false,
@@ -73,7 +73,7 @@ import { NotificationPreferenceSeeder } from './seeders/notification-preference.
       DestinationOrmEntity,
       PlaceCategoryOrmEntity,
       PlaceOrmEntity,
-      NotificationPreferenceEntity,
+      NotificationPreferenceOrmEntity,
     ]),
   ],
   providers: [

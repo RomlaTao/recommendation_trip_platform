@@ -27,6 +27,7 @@ import {
 } from '../dtos/place-catalog.response.dto.js';
 import { SearchPlacesQueryDto } from '../dtos/search-places.query.dto.js';
 import { NearbyRateLimitGuard } from '../guards/nearby-rate-limit.guard.js';
+import { PlaceCatalogPresentationMapper } from '../mappers/place-catalog-presentation.mapper.js';
 
 @ApiTags('Place Catalog')
 @Controller('places')
@@ -58,8 +59,26 @@ export class PlaceCatalogController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiOkResponse({ type: PaginatedPlacesDto })
-  search(@Query() query: SearchPlacesQueryDto) {
-    return this.placeCatalogService.getPlaces(query);
+  async search(
+    @Query() query: SearchPlacesQueryDto,
+  ): Promise<PaginatedPlacesDto> {
+    const result = await this.placeCatalogService.search({
+      page: query.page,
+      limit: query.limit,
+      q: query.q,
+      categoryId: query.categoryId,
+      destinationId: query.destinationId,
+      minRating: query.minRating,
+      sort: query.sort,
+    });
+    return {
+      items: result.items.map((item) =>
+        PlaceCatalogPresentationMapper.toPlaceListItemResponse(item),
+      ),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
   }
 
   @Get('nearby')
@@ -70,24 +89,41 @@ export class PlaceCatalogController {
   @ApiTooManyRequestsResponse({
     description: 'Too many nearby requests in a short window',
   })
-  findNearby(@Query() query: NearbyPlacesQueryDto) {
-    return this.placeCatalogService.getNearbyPlaces(query);
+  async findNearby(
+    @Query() query: NearbyPlacesQueryDto,
+  ): Promise<NearbyPlaceDto[]> {
+    const items = await this.placeCatalogService.findNearby({
+      lat: query.lat,
+      lng: query.lng,
+      radiusInMeters: query.radiusInMeters,
+      limit: query.limit,
+      destinationId: query.destinationId,
+    });
+    return items.map((item) =>
+      PlaceCatalogPresentationMapper.toNearbyPlaceResponse(item),
+    );
   }
 
   @Get('categories')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List place categories for catalog filters' })
   @ApiOkResponse({ type: [PlaceCategoryDto] })
-  getCategories() {
-    return this.placeCatalogService.getCategories();
+  async getCategories(): Promise<PlaceCategoryDto[]> {
+    const categories = await this.placeCatalogService.listCategories();
+    return categories.map((item) =>
+      PlaceCatalogPresentationMapper.toCategoryResponse(item),
+    );
   }
 
   @Get('destinations')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List destinations for catalog filters' })
   @ApiOkResponse({ type: [DestinationDto] })
-  getDestinations() {
-    return this.placeCatalogService.getDestinations();
+  async getDestinations(): Promise<DestinationDto[]> {
+    const destinations = await this.placeCatalogService.listDestinations();
+    return destinations.map((item) =>
+      PlaceCatalogPresentationMapper.toDestinationResponse(item),
+    );
   }
 
   @Get(':id')
@@ -95,7 +131,10 @@ export class PlaceCatalogController {
   @ApiOperation({ summary: 'Get approved place detail by id' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiOkResponse({ type: PlaceDetailDto })
-  getById(@Param('id', new ParseUUIDPipe()) placeId: string) {
-    return this.placeCatalogService.getPlaceById(placeId);
+  async getById(
+    @Param('id', new ParseUUIDPipe()) placeId: string,
+  ): Promise<PlaceDetailDto> {
+    const place = await this.placeCatalogService.getPlaceById(placeId);
+    return PlaceCatalogPresentationMapper.toPlaceDetailResponse(place);
   }
 }

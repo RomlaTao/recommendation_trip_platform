@@ -10,7 +10,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import type { PlaceCatalogSort } from '../../application/ports/place-catalog-repository.port.js';
+import type { PlaceCatalogSort } from '../../application/queries/search-places.query.js';
 
 const sortValues: PlaceCatalogSort[] = ['newest', 'rating_desc', 'name_asc'];
 

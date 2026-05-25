@@ -47,9 +47,3 @@ export interface SendEmailNotificationJobPayload {
     | PlaceRejectedNotificationPayload
     | PlaceRequestSubmittedNotificationPayload;
 }
-
-export interface NotificationPreferenceSnapshot {
-  type: NotificationPreferenceType;
-  emailEnabled: boolean;
-  inAppEnabled: boolean;
-}

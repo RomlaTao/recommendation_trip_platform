@@ -1,10 +1,14 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PLACE_CATALOG_REPOSITORY } from './application/catalog.di-tokens.js';
+import {
+  PLACE_CATALOG_REPOSITORY,
+  PLACE_RATING_SNAPSHOT_INBOX,
+} from './application/catalog.di-tokens.js';
 import { PlaceCatalogService } from './application/services/place-catalog.service.js';
 import { PlaceRatingSnapshotService } from './application/services/place-rating-snapshot.service.js';
-import { PlaceCatalogRepository } from './infrastructure/persistence/typeorm/place-catalog.repository.js';
+import { TypeormPlaceCatalogRepository } from './infrastructure/persistence/repositories/typeorm-place-catalog.repository.js';
+import { TypeormPlaceRatingSnapshotInboxRepository } from './infrastructure/persistence/repositories/typeorm-place-rating-snapshot-inbox.repository.js';
 import { PlaceManagementModule } from '../management/management.module.js';
 import { PlaceCatalogController } from './presentation/controllers/place-catalog.controller.js';
 import { NearbyRateLimitGuard } from './presentation/guards/nearby-rate-limit.guard.js';
@@ -38,7 +42,11 @@ import { PLACE_RATING_SNAPSHOT_QUEUE } from '../shared/events/place-review.event
     NearbyRateLimitGuard,
     {
       provide: PLACE_CATALOG_REPOSITORY,
-      useClass: PlaceCatalogRepository,
+      useClass: TypeormPlaceCatalogRepository,
+    },
+    {
+      provide: PLACE_RATING_SNAPSHOT_INBOX,
+      useClass: TypeormPlaceRatingSnapshotInboxRepository,
     },
   ],
   exports: [

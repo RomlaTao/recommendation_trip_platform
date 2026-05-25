@@ -11,11 +11,14 @@ import tokenConfig from './core/config/token.config.js';
 import queueConfig, { QueueConfig } from './core/config/queue.config.js';
 import emailConfig from './core/config/email.config.js';
 import rabbitmqConfig from './core/config/rabbitmq.config.js';
+import realtimeConfig from './core/realtime/config/realtime.config.js';
 import { AuthModule } from './core/auth/auth.module.js';
+import { RealtimeModule } from './core/realtime/realtime.module.js';
 import { UsersModule } from './modules/user/users.module.js';
 import { SeedOnStartModule } from './core/database/seeds/seed-on-start.module.js';
 import { PlaceModule } from './modules/place/place.module.js';
 import { TripModule } from './modules/trip/trip.module.js';
+import { ChatModule } from './modules/chat/chat.module.js';
 
 /**
  * App Module — Root of the dependency graph
@@ -37,7 +40,14 @@ import { TripModule } from './modules/trip/trip.module.js';
       isGlobal: true,
       envFilePath: '.env',
       // Register typed config namespaces — accessed via ConfigService.get('database')
-      load: [databaseConfig, tokenConfig, queueConfig, emailConfig, rabbitmqConfig],
+      load: [
+        databaseConfig,
+        tokenConfig,
+        queueConfig,
+        emailConfig,
+        rabbitmqConfig,
+        realtimeConfig,
+      ],
       cache: true,
     }),
 
@@ -76,10 +86,12 @@ import { TripModule } from './modules/trip/trip.module.js';
     }),
 
     // ── Feature modules ───────────────────────────────────────────────────────
+    RealtimeModule,
     AuthModule,
     UsersModule,
     PlaceModule,
     TripModule,
+    ChatModule,
 
     // ── Startup seeding (development only) ────────────────────────────────────
     ...(process.env.SEED_ON_START === 'true' ? [SeedOnStartModule] : []),

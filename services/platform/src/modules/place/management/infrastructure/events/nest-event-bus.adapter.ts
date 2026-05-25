@@ -1,6 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Repository } from 'typeorm';
+import { NOTIFICATION_DISPATCH } from '../../../../notification/application/notification.di-tokens.js';
+import type { NotificationDispatchPort } from '../../../../notification/application/ports/notification-dispatch.port.js';
+import { Role } from '../../../../permission/entities/role.entity.js';
+import { UserRole } from '../../../../permission/entities/user-role.entity.js';
 import { PlaceManagementEventBusPort } from '../../application/ports/event-bus.interface.js';
 import {
   DomainEvent,
@@ -8,16 +12,14 @@ import {
   PlaceRegistrationRequestSubmittedEvent,
   PlaceRejectedEvent,
 } from '../../domain/events/place-management.events.js';
-import { NotificationService } from '../../../../notification/services/notification.service.js';
-import { Role } from '../../../../permission/entities/role.entity.js';
-import { UserRole } from '../../../../permission/entities/user-role.entity.js';
 
 @Injectable()
 export class NestEventBusAdapter implements PlaceManagementEventBusPort {
   private readonly logger = new Logger(NestEventBusAdapter.name);
 
   constructor(
-    private readonly notificationService: NotificationService,
+    @Inject(NOTIFICATION_DISPATCH)
+    private readonly notificationDispatch: NotificationDispatchPort,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserRole)
@@ -26,20 +28,19 @@ export class NestEventBusAdapter implements PlaceManagementEventBusPort {
 
   async publish(events: DomainEvent[]): Promise<void> {
     for (const event of events) {
-      // Lightweight event publishing for now; can be replaced by outbox/message bus later.
       this.logger.log(
         `Published domain event: ${event.metadata.eventType} (id=${event.metadata.eventId}, aggregate=${event.metadata.aggregateType}:${event.metadata.aggregateId})`,
       );
 
       if (event instanceof PlaceApprovedEvent) {
-        await this.notificationService.notifyPlaceApproved({
+        await this.notificationDispatch.notifyPlaceApproved({
           actorUserId: event.actorUserId,
           placeId: event.placeId,
         });
       } else if (event instanceof PlaceRegistrationRequestSubmittedEvent) {
         const reviewerUserIds = await this.getReviewerUserIds();
         for (const reviewerUserId of reviewerUserIds) {
-          await this.notificationService.notifyPlaceRequestSubmitted({
+          await this.notificationDispatch.notifyPlaceRequestSubmitted({
             recipientUserId: reviewerUserId,
             requestId: event.requestId,
             placeName: event.placeName,
@@ -47,7 +48,7 @@ export class NestEventBusAdapter implements PlaceManagementEventBusPort {
           });
         }
       } else if (event instanceof PlaceRejectedEvent) {
-        await this.notificationService.notifyPlaceRejected({
+        await this.notificationDispatch.notifyPlaceRejected({
           actorUserId: event.actorUserId,
           placeId: event.placeId,
           reason: event.reason,
