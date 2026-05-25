@@ -1,18 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
+import { NOTIFICATION_DISPATCH } from '../../../../notification/application/notification.di-tokens.js';
+import type { NotificationDispatchPort } from '../../../../notification/application/ports/notification-dispatch.port.js';
 import { PlaceRegistrationRequestInvalidStateError } from '../../domain/exceptions/place-registration-request.exception.js';
 import { PlaceRegistrationRequestStatus } from '../../enums/place-registration-request-status.enum.js';
 import { PlaceRegistrationRequestOrmEntity } from '../../infrastructure/persistence/typeorm/place-registration-request.orm-entity.js';
-import { NotificationService } from '../../../../notification/services/notification.service.js';
 
 @Injectable()
 export class RejectPlaceRegistrationRequestUseCase {
   constructor(
     @InjectRepository(PlaceRegistrationRequestOrmEntity)
     private readonly requestRepository: Repository<PlaceRegistrationRequestOrmEntity>,
-    private readonly notificationService: NotificationService,
+    @Inject(NOTIFICATION_DISPATCH)
+    private readonly notificationDispatch: NotificationDispatchPort,
   ) {}
 
   async execute(
@@ -37,7 +39,7 @@ export class RejectPlaceRegistrationRequestUseCase {
     request.reviewedAt = new Date();
     request.rejectionReason = reason.trim();
     await this.requestRepository.save(request);
-    await this.notificationService.notifyPlaceRejected({
+    await this.notificationDispatch.notifyPlaceRejected({
       actorUserId: request.requesterUserId,
       placeId: request.id,
       reason: request.rejectionReason,

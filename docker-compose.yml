@@ -104,6 +104,9 @@ services:
       RABBITMQ_PORT: '${RABBITMQ_PORT:-5672}'
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      REALTIME_ENABLED: ${REALTIME_ENABLED:-true}
+      REALTIME_CORS_ORIGIN: ${REALTIME_CORS_ORIGIN:-http://localhost:5173}
+      REALTIME_REDIS_ADAPTER_ENABLED: ${REALTIME_REDIS_ADAPTER_ENABLED:-true}
     volumes:
       - ./dataset:/app/dataset:ro
     depends_on:

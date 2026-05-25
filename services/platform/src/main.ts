@@ -7,7 +7,10 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
+import type { QueueConfig } from './core/config/queue.config.js';
+import type { RealtimeConfig } from './core/realtime/config/realtime.config.js';
 import { HttpExceptionFilter } from './core/filters/global-exception.filter.js';
+import { RedisIoAdapter } from './core/realtime/infrastructure/redis-io.adapter.js';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor.js';
 import { TransformInterceptor } from './core/interceptors/transform.interceptor.js';
 
@@ -87,10 +90,29 @@ function setupSwagger(app: INestApplication): void {
 /**
  * Application bootstrap
  */
+async function configureRealtimeAdapter(
+  app: INestApplication,
+  configService: ConfigService,
+): Promise<void> {
+  const realtime = configService.get<RealtimeConfig>('realtime');
+  if (!realtime?.enabled || !realtime.redisAdapterEnabled) {
+    return;
+  }
+  const queue = configService.get<QueueConfig>('queue');
+  if (!queue) {
+    return;
+  }
+  const adapter = new RedisIoAdapter(app, queue);
+  await adapter.connectToRedis();
+  app.useWebSocketAdapter(adapter);
+}
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
+
+  await configureRealtimeAdapter(app, configService);
 
   applyExpressMiddleware(app, configService);
   setupGlobalAppConfig(app, configService, reflector);

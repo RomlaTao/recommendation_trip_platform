@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../../../modules/user/entities/user.entity.js';
-import { NotificationPreferenceEntity } from '../../../../modules/notification/entities/notification-preference.entity.js';
+import { NotificationPreferenceOrmEntity } from '../../../../modules/notification/infrastructure/persistence/typeorm/notification-preference.orm-entity.js';
 import { NOTIFICATION_PREFERENCE_TYPES } from '../../../../modules/notification/notification.constants.js';
 
 @Injectable()
@@ -12,8 +12,8 @@ export class NotificationPreferenceSeeder {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(NotificationPreferenceEntity)
-    private readonly preferenceRepository: Repository<NotificationPreferenceEntity>,
+    @InjectRepository(NotificationPreferenceOrmEntity)
+    private readonly preferenceRepository: Repository<NotificationPreferenceOrmEntity>,
   ) {}
 
   async run(): Promise<void> {

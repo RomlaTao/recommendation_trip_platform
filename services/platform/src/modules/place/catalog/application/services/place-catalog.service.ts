@@ -1,37 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
-import { PLACE_CATALOG_REPOSITORY } from '../catalog.di-tokens.js';
-import {
-  FindNearbyPlacesQuery,
-  PaginatedPlaceCatalogItems,
-  PlaceCatalogSort,
-  NearbyPlaceReadModel,
-  SearchPlacesQuery,
-} from '../ports/place-catalog-repository.port.js';
+import type { DestinationReadModel } from '../models/destination.model.js';
+import type { PlaceCatalogDetailReadModel } from '../models/place-catalog-detail.model.js';
+import type { PlaceCategoryReadModel } from '../models/place-category.model.js';
+import type { PlaceCatalogRepositoryPort } from '../ports/place-catalog-repository.port.js';
+import type { FindNearbyPlacesQuery } from '../queries/find-nearby-places.query.js';
 import type {
-  PlaceCatalogDetailReadModel,
-  PlaceCatalogRepositoryPort,
-  DestinationReadModel,
-  PlaceCategoryReadModel,
-} from '../ports/place-catalog-repository.port.js';
-
-export interface GetPlacesInput {
-  q?: string;
-  categoryId?: string;
-  destinationId?: string;
-  minRating?: number;
-  sort: PlaceCatalogSort;
-  page: number;
-  limit: number;
-}
-
-export interface GetNearbyPlacesInput {
-  lat: number;
-  lng: number;
-  radiusInMeters: number;
-  limit: number;
-  destinationId?: string;
-}
+  SearchPlacesQuery,
+  SearchPlacesResult,
+} from '../queries/search-places.query.js';
+import { PLACE_CATALOG_REPOSITORY } from '../catalog.di-tokens.js';
 
 @Injectable()
 export class PlaceCatalogService {
@@ -42,18 +20,11 @@ export class PlaceCatalogService {
     private readonly repository: PlaceCatalogRepositoryPort,
   ) {}
 
-  getPlaces(input: GetPlacesInput): Promise<PaginatedPlaceCatalogItems> {
-    const query: SearchPlacesQuery = {
-      q: input.q?.trim() || undefined,
-      categoryId: input.categoryId,
-      destinationId: input.destinationId,
-      minRating: input.minRating,
-      sort: input.sort,
-      page: input.page,
-      limit: input.limit,
-    };
-
-    return this.repository.search(query);
+  search(query: SearchPlacesQuery): Promise<SearchPlacesResult> {
+    return this.repository.search({
+      ...query,
+      q: query.q?.trim() || undefined,
+    });
   }
 
   async getPlaceById(placeId: string): Promise<PlaceCatalogDetailReadModel> {
@@ -65,24 +36,15 @@ export class PlaceCatalogService {
     return place;
   }
 
-  getCategories(): Promise<PlaceCategoryReadModel[]> {
+  listCategories(): Promise<PlaceCategoryReadModel[]> {
     return this.repository.listCategories();
   }
 
-  getDestinations(): Promise<DestinationReadModel[]> {
+  listDestinations(): Promise<DestinationReadModel[]> {
     return this.repository.listDestinations();
   }
 
-  getNearbyPlaces(
-    input: GetNearbyPlacesInput,
-  ): Promise<NearbyPlaceReadModel[]> {
-    const query: FindNearbyPlacesQuery = {
-      lat: input.lat,
-      lng: input.lng,
-      radiusInMeters: input.radiusInMeters,
-      limit: input.limit,
-      destinationId: input.destinationId,
-    };
+  findNearby(query: FindNearbyPlacesQuery) {
     const startedAt = Date.now();
 
     return this.repository.findNearby(query).then((items) => {

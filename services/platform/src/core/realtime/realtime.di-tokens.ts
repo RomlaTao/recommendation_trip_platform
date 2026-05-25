@@ -1,0 +1,1 @@
+export const REALTIME_EMITTER = Symbol('REALTIME_EMITTER');

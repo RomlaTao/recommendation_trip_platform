@@ -26,3 +26,6 @@ export const NOTIFICATION_STATUSES = {
   FAILED: 'FAILED',
   DEAD_LETTER: 'DEAD_LETTER',
 } as const;
+
+/** Socket.IO event emitted after in-app notification is persisted (core realtime). */
+export const NOTIFICATION_REALTIME_EVENT = 'notification:new' as const;

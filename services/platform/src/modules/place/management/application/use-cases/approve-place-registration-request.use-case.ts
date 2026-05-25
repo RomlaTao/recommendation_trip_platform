@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { DataSource, IsNull } from 'typeorm';
 import { ResourceNotFoundError } from '../../../../../common/errors/app.error.js';
+import { NOTIFICATION_DISPATCH } from '../../../../notification/application/notification.di-tokens.js';
+import type { NotificationDispatchPort } from '../../../../notification/application/ports/notification-dispatch.port.js';
 import { PLACE_MANAGEMENT_EVENT_BUS } from '../management.di-tokens.js';
 import type { PlaceManagementEventBusPort } from '../ports/event-bus.interface.js';
 import { PlaceManagementAggregate } from '../../domain/entities/place-management.aggregate.js';
@@ -11,14 +13,14 @@ import { PlaceMapper } from '../../infrastructure/persistence/mappers/place.mapp
 import { PartnerOrmEntity } from '../../infrastructure/persistence/typeorm/partner.orm-entity.js';
 import { PlaceRegistrationRequestOrmEntity } from '../../infrastructure/persistence/typeorm/place-registration-request.orm-entity.js';
 import { PlaceOrmEntity } from '../../infrastructure/persistence/typeorm/place.orm-entity.js';
-import { NotificationService } from '../../../../notification/services/notification.service.js';
 
 @Injectable()
 export class ApprovePlaceRegistrationRequestUseCase {
   constructor(
     private readonly dataSource: DataSource,
     private readonly placeMapper: PlaceMapper,
-    private readonly notificationService: NotificationService,
+    @Inject(NOTIFICATION_DISPATCH)
+    private readonly notificationDispatch: NotificationDispatchPort,
     @Inject(PLACE_MANAGEMENT_EVENT_BUS)
     private readonly eventBus: PlaceManagementEventBusPort,
   ) {}
@@ -86,7 +88,7 @@ export class ApprovePlaceRegistrationRequestUseCase {
     });
 
     await this.eventBus.publish(result.events);
-    await this.notificationService.notifyPlaceApproved({
+    await this.notificationDispatch.notifyPlaceApproved({
       actorUserId: result.requesterUserId,
       placeId: result.placeId,
     });

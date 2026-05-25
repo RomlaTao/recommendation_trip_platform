@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
   BadRequestException,
@@ -19,7 +20,8 @@ import {
   USER_TOKEN_TYPES,
   UserTokenEntity,
 } from '../../modules/user/entities/user-token.entity.js';
-import { NotificationService } from '../../modules/notification/services/notification.service.js';
+import { NOTIFICATION_DISPATCH } from '../../modules/notification/application/notification.di-tokens.js';
+import type { NotificationDispatchPort } from '../../modules/notification/application/ports/notification-dispatch.port.js';
 import { UserRoleService } from '../../modules/permission/services/user-role.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -47,7 +49,8 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly notificationService: NotificationService,
+    @Inject(NOTIFICATION_DISPATCH)
+    private readonly notificationDispatch: NotificationDispatchPort,
     private readonly userRoleService: UserRoleService,
     private readonly configService: ConfigService,
     @InjectRepository(UserTokenEntity)
@@ -264,7 +267,7 @@ export class AuthService {
       }),
     );
 
-    await this.notificationService.notifyVerifyEmail({
+    await this.notificationDispatch.notifyVerifyEmail({
       to: email,
       username,
       verifyToken,
